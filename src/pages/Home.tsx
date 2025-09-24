@@ -33,7 +33,7 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon: Icon, label, onClick, v
 
 const MiningAssetCard: React.FC<MiningAssetProps> = ({ symbol, name, balance, currentPrice, isExpanded, onToggle }) => {
   const getMiningIcon = (symbol: string) => {
-    return `/src/assets/images/${symbol}.svg`;
+    return `/images/${symbol}.svg`;
   };
 
   return (
@@ -128,7 +128,7 @@ interface MiningAssetProps {
 const TokenCard: React.FC<TokenCardProps> = ({ symbol, balance, usdtValue, change24h, isExpanded, onToggle }) => {
   const getTokenIcon = (symbol: string) => {
     // Use SVG icons from assets/images folder
-    return `/src/assets/images/${symbol}.svg`;
+    return `/images/${symbol}.svg`;
   };
 
   const getTokenName = (symbol: string) => {
