@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../stores/userStore';
 import { cn } from '../lib/utils';
+import castleLogo from '../assets/images/castle_logo.svg';
 
 // Social platform icons as SVG components
 const KakaoIcon = () => (
@@ -55,9 +56,14 @@ export const Login: React.FC = () => {
           <div className="text-center mb-12">
             <div className="w-24 h-24 mx-auto mb-6 bg-white rounded-2xl flex items-center justify-center shadow-lg p-4">
               <img 
-                src="/src/assets/images/castle_logo.svg" 
+                src={castleLogo} 
                 alt="IC Castle Logo" 
                 className="w-full h-full object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.parentElement!.innerHTML = '<div class="text-2xl font-bold text-primary">IC</div>';
+                }}
               />
             </div>
             <h1 className="text-h1 font-bold text-text-main mb-2">IC Wallet</h1>
