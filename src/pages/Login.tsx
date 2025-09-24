@@ -28,14 +28,14 @@ const AppleIcon = () => (
 export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { login } = useUserStore();
+  const { socialLogin } = useUserStore();
 
   const handleSocialLogin = async (provider: 'kakao' | 'google' | 'apple') => {
     setIsLoading(provider);
     
     try {
-      // Use the login function from userStore
-      await login(provider, 'password123'); // Mock password for social login
+      // Use the socialLogin function from userStore
+      await socialLogin(provider);
       
       // Navigate to home dashboard
       navigate('/home');
