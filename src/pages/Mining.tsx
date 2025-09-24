@@ -51,15 +51,15 @@ const DepositHistoryModal: React.FC<DepositHistoryModalProps> = ({ isOpen, onClo
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
               <img 
-                src={`/src/assets/images/${coin.symbol}.svg`} 
-                alt={coin.symbol}
-                className="w-8 h-8 rounded-full"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling!.textContent = coin.symbol.charAt(0);
-                }}
-              />
+              src={`/images/${coin.symbol}.svg`} 
+              alt={coin.symbol}
+              className="w-8 h-8 rounded-full"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling!.textContent = coin.symbol.charAt(0);
+              }}
+            />
               <span className="text-sm font-bold text-gray-600 hidden">{coin.symbol.charAt(0)}</span>
             </div>
             <div>
@@ -148,7 +148,7 @@ const DepositHistoryModal: React.FC<DepositHistoryModalProps> = ({ isOpen, onClo
 
 const MiningCard: React.FC<MiningCardProps> = ({ coin, onClick }) => {
   const getTokenIcon = (symbol: string) => {
-    return `/src/assets/images/${symbol}.svg`;
+    return `/images/${symbol}.svg`;
   };
 
   return (
@@ -211,7 +211,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'LTC',
       name: 'Litecoin',
-      icon: '/src/assets/images/LTC.svg',
+      icon: '/images/LTC.svg',
       holdings: 0.234,
       hashRate: 125.5,
       price: 89.45
@@ -219,7 +219,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'DOGE',
       name: 'Dogecoin',
-      icon: '/src/assets/images/DOGE.svg',
+      icon: '/images/DOGE.svg',
       holdings: 456.78,
       hashRate: 89.2,
       price: 0.0823
@@ -227,7 +227,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'BELLS',
       name: 'Bellscoin',
-      icon: '/src/assets/images/BELLS.svg',
+      icon: '/images/BELLS.svg',
       holdings: 1234.56,
       hashRate: 0,
       price: 0.0045
@@ -235,7 +235,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'PEP',
       name: 'Pepecoin',
-      icon: '/src/assets/images/PEP.svg',
+      icon: '/images/PEP.svg',
       holdings: 8901.23,
       hashRate: 67.8,
       price: 0.000234
@@ -243,7 +243,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'JKC',
       name: 'Junkcoin',
-      icon: '/src/assets/images/JKC.svg',
+      icon: '/images/JKC.svg',
       holdings: 567.89,
       hashRate: 0,
       price: 0.0012
@@ -251,7 +251,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'LKY',
       name: 'Luckycoin',
-      icon: '/src/assets/images/LKY.svg',
+      icon: '/images/LKY.svg',
       holdings: 2345.67,
       hashRate: 156.3,
       price: 0.0567
@@ -259,7 +259,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'DINGO',
       name: 'Dingocoin',
-      icon: '/src/assets/images/DINGO.svg',
+      icon: '/images/DINGO.svg',
       holdings: 123.45,
       hashRate: 0,
       price: 0.0089
@@ -267,7 +267,7 @@ export const Mining: React.FC = () => {
     {
       symbol: 'SHIC',
       name: 'Shitcoin',
-      icon: '/src/assets/images/SHIC.svg',
+      icon: '/images/SHIC.svg',
       holdings: 4567.89,
       hashRate: 98.7,
       price: 0.000045
