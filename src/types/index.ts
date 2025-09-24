@@ -314,7 +314,8 @@ export interface UserStore {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, deviceId: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  socialLogin: (provider: 'kakao' | 'google' | 'apple') => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
