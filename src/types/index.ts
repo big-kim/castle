@@ -49,6 +49,11 @@ export interface P2PProductDetails {
   expiry_date?: string;
   brand?: string;
   category?: string;
+  usage_location?: string;
+  denomination?: number;
+  base_price?: number;
+  discount_rate?: number;
+  product_code?: string;
 }
 
 export interface AssetSummary {

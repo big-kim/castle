@@ -1428,8 +1428,8 @@ export const P2P: React.FC = () => {
                     </span>
                     <span className="font-semibold text-gray-900">
                       {(formData.product_type || productType) === 'coupon' 
-                        ? `${formatCurrency(formData.price_per_token || 0)}`
-                        : `${formatCurrency(formData.price_per_token || 0)}`
+                        ? `${formatCurrency(Number(formData.price_per_token) || 0)}`
+                        : `${formatCurrency(Number(formData.price_per_token) || 0)}`
                       }
                     </span>
                   </div>
@@ -1442,8 +1442,8 @@ export const P2P: React.FC = () => {
                 </span>
                 <span className="font-bold text-xl text-primary">
                   {(formData.product_type || productType) === 'coupon' 
-                    ? `${formatCurrency((formData.amount || 0) * parseFloat(String(formData.price_per_token || '0')))}`
-                    : `${formatCurrency((formData.amount || 0) * parseFloat(String(formData.price_per_token || '0')))}`
+                    ? `${formatCurrency((formData.amount || 0) * (Number(formData.price_per_token) || 0))}`
+                    : `${formatCurrency((formData.amount || 0) * (Number(formData.price_per_token) || 0))}`
                   }
                 </span>
               </div>

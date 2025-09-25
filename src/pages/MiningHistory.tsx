@@ -5,12 +5,10 @@ import { useMiningStore } from '../stores/miningStore';
 import { Layout } from '../components/Layout';
 
 interface DailyDepositRecord {
-  id: string;
   date: string;
   time: string;
   amount: number;
   hashRate: number;
-  coinSymbol: string;
   usdValue: number;
 }
 
@@ -333,7 +331,7 @@ const MiningHistory: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentDepositHistory.map((record, index) => (
-                    <tr key={`${record.id}-${record.date}-${index}`} className="hover:bg-gray-50">
+                    <tr key={`${record.date}-${record.time}-${index}`} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
@@ -344,7 +342,7 @@ const MiningHistory: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-body-sm font-semibold text-green-600">
-                          +{record.amount.toFixed(6)} {record.coinSymbol}
+                          +{record.amount.toFixed(6)} {coinSymbol}
                         </span>
                       </td>
                     </tr>
