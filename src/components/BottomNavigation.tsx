@@ -13,7 +13,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     id: 'home',
-    label: 'Home',
+    label: '홈',
     icon: Home,
     path: '/',
   },
@@ -25,19 +25,19 @@ const navItems: NavItem[] = [
   },
   {
     id: 'mining',
-    label: 'Mining',
+    label: '채굴',
     icon: Pickaxe,
     path: '/mining',
   },
   {
     id: 'finance',
-    label: 'Finance',
+    label: '금융',
     icon: TrendingUp,
     path: '/finance',
   },
   {
     id: 'gift',
-    label: 'Gift',
+    label: '기프트',
     icon: Gift,
     path: '/gift',
   },
