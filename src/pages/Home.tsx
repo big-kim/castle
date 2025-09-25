@@ -5,6 +5,7 @@ import { ArrowUpRight, ArrowDownLeft, Send, QrCode, Plus, TrendingUp, Pickaxe, A
 import { useAssetStore } from '../stores/assetStore';
 import { useGiftStore } from '../stores/giftStore';
 import { formatCurrency, formatTokenAmount, cn } from '../lib/utils';
+import { getCoinIcon, getCoinInitial } from '../utils/coinIcons';
 import { TokenSymbol } from '../types';
 
 interface QuickActionProps {
@@ -32,9 +33,6 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon: Icon, label, onClick, v
 };
 
 const MiningAssetCard: React.FC<MiningAssetProps> = ({ symbol, name, balance, currentPrice, isExpanded, onToggle }) => {
-  const getMiningIcon = (symbol: string) => {
-    return `/images/${symbol.toLowerCase()}.svg`;
-  };
 
   return (
     <div 
@@ -45,16 +43,16 @@ const MiningAssetCard: React.FC<MiningAssetProps> = ({ symbol, name, balance, cu
         <div className="flex items-center space-x-2 sm:space-x-3">
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center">
             <img 
-              src={getMiningIcon(symbol)} 
+              src={getCoinIcon(symbol)} 
               alt={symbol}
               className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
-                target.nextElementSibling!.textContent = symbol.charAt(0);
+                target.nextElementSibling!.textContent = getCoinInitial(symbol);
               }}
             />
-            <span className="text-xs sm:text-sm font-bold text-gray-600 hidden">{symbol.charAt(0)}</span>
+            <span className="text-xs sm:text-sm font-bold text-gray-600 hidden">{getCoinInitial(symbol)}</span>
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{symbol}</h3>
@@ -126,10 +124,6 @@ interface MiningAssetProps {
 }
 
 const TokenCard: React.FC<TokenCardProps> = ({ symbol, balance, usdtValue, change24h, isExpanded, onToggle }) => {
-  const getTokenIcon = (symbol: string) => {
-    // Use SVG icons from assets/images folder
-    return `/images/${symbol.toLowerCase()}.svg`;
-  };
 
   const getTokenName = (symbol: string) => {
     const nameMap = {
@@ -154,16 +148,16 @@ const TokenCard: React.FC<TokenCardProps> = ({ symbol, balance, usdtValue, chang
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
             <img 
-              src={getTokenIcon(symbol)} 
+              src={getCoinIcon(symbol)} 
               alt={symbol}
               className="w-8 h-8 rounded-full"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
-                target.nextElementSibling!.textContent = symbol.charAt(0);
+                target.nextElementSibling!.textContent = getCoinInitial(symbol);
               }}
             />
-            <span className="text-sm font-bold text-gray-600 hidden">{symbol.charAt(0)}</span>
+            <span className="text-sm font-bold text-gray-600 hidden">{getCoinInitial(symbol)}</span>
           </div>
           <div>
             <h3 className="font-semibold text-gray-900">{symbol}</h3>
@@ -328,7 +322,7 @@ export const Home: React.FC = () => {
     { symbol: 'USDT', balance: 1000.00, usdtValue: 1000.00, change24h: 0.1 },
   ];
 
-  // Mining assets data
+  // Mining assets data - 채굴 페이지와 동일한 8개 코인
   const miningAssets = [
     { symbol: 'LTC', name: 'Litecoin', balance: 0.2450, currentPrice: 92.35 },
     { symbol: 'DOGE', name: 'Dogecoin', balance: 1250.75, currentPrice: 0.0825 },
@@ -356,40 +350,40 @@ export const Home: React.FC = () => {
     <div className="p-4 space-y-6">
       {/* Total Assets Dashboard */}
       <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-white shadow-lg">
-        <h2 className="text-lg font-medium mb-4">Total Assets</h2>
+        <h2 className="text-lg font-medium mb-4">총 자산</h2>
         <div className="space-y-2">
           <p className="text-3xl font-bold">
-            ${formatTokenAmount(summary?.total_value_usdt || 0, 2)}
+            {formatTokenAmount(summary?.total_value_usdt || 0, 2)} USDT
           </p>
           <p className="text-white/80 text-sm">
-            ≈ {formatCurrency((summary?.total_value_usdt || 0) * 1380)}
+            ≈ {formatCurrency(summary?.total_value_usdt || 0)} USDT
           </p>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Quick actions</h3>
+        <h3 className="text-lg font-semibold text-gray-900">빠른 실행</h3>
         <div className="flex space-x-3 overflow-x-auto pb-2">
           <QuickAction
             icon={ArrowUpRight}
-            label="Send"
+            label="전송"
             onClick={() => handleQuickAction('send')}
             variant="primary"
           />
           <QuickAction
             icon={ArrowDownLeft}
-            label="Receive"
+            label="받기"
             onClick={() => handleQuickAction('receive')}
           />
           <QuickAction
             icon={QrCode}
-            label="QR Pay"
+            label="QR 결제"
             onClick={() => handleQuickAction('qr-pay')}
           />
           <QuickAction
             icon={Plus}
-            label="Buy"
+            label="구매"
             onClick={() => handleQuickAction('buy')}
           />
         </div>
@@ -398,9 +392,9 @@ export const Home: React.FC = () => {
       {/* Crypto Assets */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">My assets</h3>
+          <h3 className="text-lg font-semibold text-gray-900">내 자산</h3>
           <button className="text-primary text-sm font-medium">
-            View All
+            전체 보기
           </button>
         </div>
         
@@ -424,10 +418,13 @@ export const Home: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Pickaxe className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-gray-900">My mining assets</h3>
+            <h3 className="text-lg font-semibold text-gray-900">내 채굴 자산</h3>
           </div>
-          <button className="text-primary text-sm font-medium">
-            View All
+          <button 
+            className="text-primary text-sm font-medium"
+            onClick={() => navigate('/mining')}
+          >
+            전체 보기
           </button>
         </div>
         
@@ -450,12 +447,12 @@ export const Home: React.FC = () => {
       {userGiftCards.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">My gift cards</h3>
+            <h3 className="text-lg font-semibold text-gray-900">내 기프트 카드</h3>
             <button 
               className="text-primary text-sm font-medium"
               onClick={() => navigate('/gift')}
             >
-              View All
+              전체 보기
             </button>
           </div>
           

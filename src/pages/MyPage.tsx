@@ -625,9 +625,9 @@ const ConnectedDevicesSection: React.FC = () => {
   return (
     <div className="bg-white rounded-xl p-6 mb-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-        <Smartphone className="w-5 h-5 mr-2 text-indigo-600" />
-        연결된 기기
-      </h3>
+          <Smartphone className="w-5 h-5 mr-2 text-indigo-600" />
+          연결된 기기
+        </h3>
       
       <div className="space-y-3">
         {devices.map((device) => (
@@ -754,7 +754,7 @@ const WhitelistAddressSection: React.FC = () => {
                   value={newAddress.name}
                   onChange={(e) => setNewAddress({...newAddress, name: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: My Binance Wallet"
+                  placeholder="예: 내 바이낸스 지갑"
                 />
               </div>
               

@@ -12,3 +12,27 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Custom scrollbar styles for product type tabs */
+.product-type-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.product-type-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.product-type-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.product-type-scroll::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.product-type-scroll::-webkit-scrollbar-thumb:active {
+  background: #6b7280;
+}

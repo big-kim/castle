@@ -20,7 +20,7 @@ export interface UserSettings {
   notifications: boolean;
   biometric_enabled: boolean;
   language: 'ko' | 'en';
-  currency: 'KRW' | 'USD';
+  currency: 'USDT';
 }
 
 // Asset Types
@@ -35,6 +35,22 @@ export interface Asset {
 
 export type TokenSymbol = 'ICC' | 'ICS' | 'ICF' | 'ICG' | 'AITC' | 'AITCP' | 'USDT' | 'BTC' | 'ETH' | 'BNB' | 'ADA' | 'LTC' | 'DOGE' | 'BELLS' | 'PEP' | 'JKC' | 'LKY' | 'DINGO' | 'SHIC';
 
+// P2P Product Types
+export type P2PProductType = 'token' | 'nft' | 'coupon' | 'other';
+
+export interface P2PProductDetails {
+  name: string;
+  description?: string;
+  image_url?: string;
+  nft_contract_address?: string;
+  nft_token_id?: string;
+  coupon_code?: string;
+  coupon_barcode?: string;
+  expiry_date?: string;
+  brand?: string;
+  category?: string;
+}
+
 export interface AssetSummary {
   total_value_usdt: number;
   tokens: Asset[];
@@ -42,12 +58,17 @@ export interface AssetSummary {
 }
 
 // P2P Trading Types
+export type TradeMethod = 'normal' | 'smart_contract';
+export type SmartContractStatus = 'listed' | 'pending' | 'completed' | 'canceled' | 'timeout';
+
 export interface P2POrder {
   id: string;
   user_id: string;
   user_name?: string;
   user_rating?: number;
-  token_symbol: TokenSymbol;
+  product_type: P2PProductType;
+  token_symbol: TokenSymbol; // 판매하는 상품의 토큰 (상품이 토큰인 경우)
+  payment_token_symbol: TokenSymbol; // 결제에 사용할 토큰
   amount: number;
   price: number;
   price_per_token: number;
@@ -55,6 +76,12 @@ export interface P2POrder {
   payment_method: string;
   type: 'buy' | 'sell';
   status: 'active' | 'completed' | 'cancelled';
+  trade_method: TradeMethod;
+  smart_contract_status?: SmartContractStatus;
+  contract_address?: string;
+  transaction_hash?: string;
+  escrow_timeout?: string;
+  product_details?: P2PProductDetails;
   created_at: string;
   updated_at: string;
 }
@@ -185,6 +212,73 @@ export interface StakingProduct {
   total_staked?: number;
 }
 
+// LEND Types
+export interface LendProduct {
+  id: string;
+  name: string;
+  description: string;
+  apy: number;
+  min_amount: number;
+  max_amount: number;
+  duration_days: number;
+  available: boolean;
+  risk_level?: 'low' | 'medium' | 'high';
+  available_slots?: number;
+  total_lent?: number;
+  nft_type: 'ic_gift_card';
+  collateral_ratio: number;
+}
+
+export interface LendRecord {
+  id: string;
+  user_id: string;
+  product_id: string;
+  nft_token_id: string;
+  amount: number;
+  apy: number;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'completed' | 'cancelled';
+  rewards_earned: number;
+  collateral_value: number;
+}
+
+// LOAN Types
+export interface LoanProduct {
+  id: string;
+  name: string;
+  description: string;
+  interest_rate: number;
+  min_amount: number;
+  max_amount: number;
+  duration_days: number;
+  available: boolean;
+  risk_level?: 'low' | 'medium' | 'high';
+  available_slots?: number;
+  total_loaned?: number;
+  collateral_required: boolean;
+  collateral_ratio?: number;
+  loan_to_value_ratio: number;
+}
+
+export interface LoanRecord {
+  id: string;
+  user_id: string;
+  product_id: string;
+  amount: number;
+  interest_rate: number;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'completed' | 'defaulted' | 'cancelled';
+  total_interest: number;
+  paid_interest: number;
+  remaining_balance: number;
+  collateral_nft_id?: string;
+  collateral_value?: number;
+  next_payment_date: string;
+  monthly_payment: number;
+}
+
 // Gift Card Types
 export interface GiftCard {
   id: string;
@@ -281,10 +375,15 @@ export interface LoginForm {
 
 export interface P2POrderForm {
   type: 'sell' | 'buy';
+  product_type: P2PProductType;
   token_symbol: TokenSymbol;
+  payment_token_symbol: TokenSymbol;
   amount: number;
   price: number;
+  price_per_token: string | number;
   payment_method: string;
+  trade_method: TradeMethod;
+  product_details?: P2PProductDetails;
 }
 
 export interface WithdrawalForm {
@@ -335,11 +434,18 @@ export interface P2PStore {
   myOrders: P2POrder[];
   transactions: P2PTransaction[];
   isLoading: boolean;
+  error: string | null;
   fetchOrders: (type?: 'sell' | 'buy') => Promise<void>;
   fetchMyOrders: () => Promise<void>;
-  createOrder: (order: P2POrderForm) => Promise<void>;
+  createOrder: (orderData: P2POrderForm) => Promise<P2POrder>;
   cancelOrder: (orderId: string) => Promise<void>;
-  executeOrder: (orderId: string, amount: number) => Promise<void>;
+  executeOrder: (orderId: string) => Promise<P2PTransaction>;
+  // Smart Contract Functions
+  listAsset: (orderId: string, tokenAddress: string, amount: number) => Promise<string>;
+  initiateTrade: (orderId: string, buyerAddress: string) => Promise<string>;
+  depositAndExecute: (orderId: string, paymentAmount: number) => Promise<string>;
+  reclaimAsset: (orderId: string) => Promise<string>;
+  clearError: () => void;
 }
 
 export interface MiningStore {
@@ -350,6 +456,7 @@ export interface MiningStore {
   totalHashPower: number;
   dailyRewardTotal: number;
   isLoading: boolean;
+  isWithdrawing: boolean;
   fetchActivities: () => Promise<void>;
   fetchSummary: () => Promise<void>;
   fetchMiningData: () => Promise<void>;
@@ -357,6 +464,7 @@ export interface MiningStore {
   startMining: (coinId: string) => Promise<void>;
   stopMining: (coinId: string) => Promise<void>;
   claimReward: (coinId: string) => Promise<void>;
+  withdraw: (tokenSymbol: string, amount: number, withdrawalAddress: string) => Promise<void>;
 }
 
 export interface FinanceStore {

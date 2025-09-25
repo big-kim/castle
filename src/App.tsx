@@ -4,7 +4,8 @@ import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { P2P } from './pages/P2P';
-import { Mining } from './pages/Mining';
+import Mining from './pages/Mining';
+
 import { Finance } from './pages/Finance';
 import { Gift } from './pages/Gift';
 import { MyPage } from './pages/MyPage';
@@ -47,6 +48,8 @@ export default function App() {
             <Route path="gift" element={<Gift />} />
             <Route path="mypage" element={<MyPage />} />
           </Route>
+          
+
           
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -34,15 +34,15 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
       case '/':
         return 'IC Wallet';
       case '/p2p':
-        return 'P2P Market';
+        return 'P2P 마켓';
       case '/mining':
-        return 'Mining';
+        return '채굴';
       case '/finance':
-        return 'Finance';
+        return '금융';
       case '/gift':
-        return 'Gift Store';
+        return '기프트 스토어';
       case '/mypage':
-        return 'My Page';
+        return '마이페이지';
       default:
         return 'IC Wallet';
     }
@@ -56,7 +56,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
           <button
             onClick={handleBack}
             className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-            aria-label="Go back"
+            aria-label="뒤로 가기"
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
@@ -64,7 +64,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
           <button
             onClick={() => navigate('/')}
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-            aria-label="Go to home"
+            aria-label="홈으로 가기"
           >
             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm border border-gray-100">
               <img
@@ -89,7 +89,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
             <div className="relative">
               <button
                 className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative"
-                aria-label="Notifications"
+                aria-label="알림"
               >
                 <Bell className="w-5 h-5" />
                 {/* Notification Badge */}
@@ -103,7 +103,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
              <button
                onClick={handleProfile}
                className="flex items-center space-x-2 sm:space-x-3 p-1.5 sm:p-2 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
-               aria-label="User profile"
+               aria-label="사용자 프로필"
              >
               {/* Avatar */}
               <div className="relative">
@@ -134,7 +134,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
                    </div>
                  </div>
                  <div className="flex items-center space-x-1 sm:space-x-2">
-                   <span className="text-xs text-gray-500">Balance:</span>
+                   <span className="text-xs text-gray-500">잔액:</span>
                    <span className="text-xs font-semibold text-primary">₩1,234,567</span>
                  </div>
                </div>

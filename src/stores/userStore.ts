@@ -22,7 +22,7 @@ const mockLogin = async (email: string, password: string): Promise<User> => {
         notifications: true,
         biometric_enabled: false,
         language: 'ko',
-        currency: 'KRW'
+        currency: 'USDT'
       },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -84,7 +84,7 @@ const mockSocialLogin = async (provider: 'kakao' | 'google' | 'apple'): Promise<
       notifications: true,
       biometric_enabled: false,
       language: 'ko',
-      currency: 'KRW'
+      currency: 'USDT'
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -109,7 +109,7 @@ const mockUpdateProfile = async (data: Partial<User>): Promise<User> => {
       notifications: true,
       biometric_enabled: false,
       language: 'ko',
-      currency: 'KRW',
+      currency: 'USDT',
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

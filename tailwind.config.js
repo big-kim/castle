@@ -10,14 +10,14 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#1A2A6C', // Prestige Blue
-          50: '#F0F2FF',
-          100: '#E0E6FF',
-          500: '#1A2A6C',
-          600: '#152356',
-          700: '#101C41',
-          800: '#0B152C',
-          900: '#060E17',
+          DEFAULT: '#20B2AA', // Turquoise
+          50: '#F0FDFC',
+          100: '#CCFBF1',
+          500: '#20B2AA',
+          600: '#1C9B94',
+          700: '#18847E',
+          800: '#146D68',
+          900: '#105652',
         },
         secondary: {
           DEFAULT: '#D4AF37', // Royal Gold
