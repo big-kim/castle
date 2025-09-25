@@ -514,6 +514,8 @@ export const Finance: React.FC = () => {
     {
       id: 'lend1',
       name: 'IC 상품권 NFT 대여 30일',
+      description: '30일 단기 NFT 대여로 높은 수익률을 제공합니다.',
+      nft_type: 'ic_gift_card',
       apy: 15.0,
       duration_days: 30,
       min_amount: 200,
@@ -526,6 +528,8 @@ export const Finance: React.FC = () => {
     {
       id: 'lend2',
       name: 'IC 상품권 NFT 대여 60일',
+      description: '60일 중기 NFT 대여로 안정적인 수익을 보장합니다.',
+      nft_type: 'ic_gift_card',
       apy: 22.0,
       duration_days: 60,
       min_amount: 500,
@@ -538,6 +542,8 @@ export const Finance: React.FC = () => {
     {
       id: 'lend3',
       name: 'IC 상품권 NFT 대여 90일',
+      description: '90일 장기 NFT 대여로 최고 수익률을 제공합니다.',
+      nft_type: 'ic_gift_card',
       apy: 28.0,
       duration_days: 90,
       min_amount: 1000,
@@ -554,6 +560,7 @@ export const Finance: React.FC = () => {
     {
       id: 'loan1',
       name: '단기 대출 30일',
+      description: '30일 단기 대출 상품으로 빠른 자금 조달이 가능합니다.',
       interest_rate: 12.0,
       duration_days: 30,
       min_amount: 100,
@@ -567,6 +574,7 @@ export const Finance: React.FC = () => {
     {
       id: 'loan2',
       name: '중기 대출 90일',
+      description: '90일 중기 대출 상품으로 안정적인 자금 운용이 가능합니다.',
       interest_rate: 18.0,
       duration_days: 90,
       min_amount: 500,
@@ -580,6 +588,7 @@ export const Finance: React.FC = () => {
     {
       id: 'loan3',
       name: '장기 대출 180일',
+      description: '180일 장기 대출 상품으로 대규모 자금 조달에 적합합니다.',
       interest_rate: 25.0,
       duration_days: 180,
       min_amount: 1000,
