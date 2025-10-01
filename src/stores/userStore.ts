@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, UserStore, UserSettings } from '../types';
+import type { User, UserStore, UserSettings, Language, Currency } from '../types';
 
 // ============================================================================
 // CONSTANTS
@@ -174,7 +174,88 @@ export const useUserStore = create<UserStore>()(
       socialLogin: async (provider: 'kakao' | 'google' | 'apple') => {
         set({ isLoading: true });
         try {
-          // Use test social login for development
+          // ============================================================================
+          // MOCK SOCIAL LOGIN - 백엔드 연결 없이 바로 로그인 처리
+          // ============================================================================
+          
+          // 가짜 사용자 정보 생성 (각 소셜 로그인별로 다른 정보)
+          const mockUsers = {
+            kakao: {
+              id: 'kakao_user_001',
+              icastleId: 'kakao_user',
+              email: 'kakao@example.com',
+              name: 'Kakao User',
+              profileImage: undefined,
+              walletAddress: undefined,
+              socialProvider: 'kakao',
+              settings: {
+                appLockEnabled: false,
+                notificationsEnabled: true,
+                biometricEnabled: false,
+                language: 'ko' as Language,
+                currency: 'USDT' as Currency,
+              },
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            google: {
+              id: 'google_user_001',
+              icastleId: 'google_user',
+              email: 'google@example.com',
+              name: 'Google User',
+              profileImage: undefined,
+              walletAddress: undefined,
+              socialProvider: 'google',
+              settings: {
+                appLockEnabled: false,
+                notificationsEnabled: true,
+                biometricEnabled: false,
+                language: 'ko' as Language,
+                currency: 'USDT' as Currency,
+              },
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            apple: {
+              id: 'apple_user_001',
+              icastleId: 'apple_user',
+              email: 'apple@example.com',
+              name: 'Apple User',
+              profileImage: undefined,
+              walletAddress: undefined,
+              socialProvider: 'apple',
+              settings: {
+                appLockEnabled: false,
+                notificationsEnabled: true,
+                biometricEnabled: false,
+                language: 'ko' as Language,
+                currency: 'USDT' as Currency,
+              },
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          };
+
+          // 가짜 JWT 토큰 생성 (실제 검증은 하지 않음)
+          const mockToken = `mock_jwt_token_${provider}_${Date.now()}`;
+          
+          // 선택된 소셜 로그인에 해당하는 사용자 정보
+          const user = mockUsers[provider];
+          
+          // 토큰 설정 및 로그인 상태 업데이트
+          get().setToken(mockToken);
+          set({ user, isAuthenticated: true, isLoading: false });
+          
+          // 성공 메시지 출력
+          console.log(`${provider} 로그인 성공 (Mock):`, user.name);
+          
+          // 짧은 지연으로 실제 API 호출처럼 보이게 함
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // ============================================================================
+          // 실제 백엔드 연결 코드 (주석 처리됨 - 나중에 복구 가능)
+          // ============================================================================
+          /*
           const response = await apiCall('/auth/test-social-login', {
             method: 'POST',
             body: JSON.stringify({ provider }),
@@ -188,8 +269,8 @@ export const useUserStore = create<UserStore>()(
           get().setToken(token);
           set({ user, isAuthenticated: true, isLoading: false });
           
-          // Show success message
           console.log(`${provider} 로그인 성공:`, user.name);
+          */
         } catch (error) {
           set({ isLoading: false });
           throw error;
