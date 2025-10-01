@@ -14,8 +14,8 @@ export const generateToken = (user: User): string => {
   const payload: JWTPayload = {
     userId: user.id,
     email: user.email,
-    name: user.name,
-    provider: user.provider
+    name: user.name || user.email.split('@')[0],
+    provider: user.provider || 'local'
   };
 
   const secret = process.env.JWT_SECRET;

@@ -248,12 +248,17 @@ router.get('/kakao/callback',
     try {
       const user = req.user as any;
       if (!user) {
+        console.error('Kakao OAuth: No user returned from authentication');
         res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_failed`);
         return;
       }
 
+      console.log('Kakao OAuth successful, user:', { id: user.id, email: user.email, name: user.name });
       const token = generateToken(user);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/success?token=${token}`);
+      
+      // Redirect with token in URL for immediate login
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/?token=${token}&login=success`);
     } catch (error) {
       console.error('Kakao OAuth callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_error`);
@@ -311,12 +316,17 @@ router.get('/google/callback',
     try {
       const user = req.user as any;
       if (!user) {
+        console.error('Google OAuth: No user returned from authentication');
         res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_failed`);
         return;
       }
 
+      console.log('Google OAuth successful, user:', { id: user.id, email: user.email, name: user.name });
       const token = generateToken(user);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/success?token=${token}`);
+      
+      // Redirect with token in URL for immediate login
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/?token=${token}&login=success`);
     } catch (error) {
       console.error('Google OAuth callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_error`);
@@ -349,12 +359,17 @@ router.post('/apple/callback',
     try {
       const user = req.user as any;
       if (!user) {
+        console.error('Apple OAuth: No user returned from authentication');
         res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_failed`);
         return;
       }
 
+      console.log('Apple OAuth successful, user:', { id: user.id, email: user.email, name: user.name });
       const token = generateToken(user);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/success?token=${token}`);
+      
+      // Redirect with token in URL for immediate login
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      res.redirect(`${frontendUrl}/?token=${token}&login=success`);
     } catch (error) {
       console.error('Apple OAuth callback error:', error);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_error`);

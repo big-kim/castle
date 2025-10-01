@@ -33,12 +33,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { initialize } = useUserStore();
+  const { initialize, setToken } = useUserStore();
 
   // Initialize authentication state on app startup
   useEffect(() => {
+    // Check for token in URL parameters (from social login redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const loginSuccess = urlParams.get('login');
+    
+    if (token && loginSuccess === 'success') {
+      console.log('Social login token received, logging in automatically');
+      setToken(token);
+      
+      // Clean up URL parameters
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+    
     initialize();
-  }, [initialize]);
+  }, [initialize, setToken]);
 
   return (
     <ErrorBoundary>

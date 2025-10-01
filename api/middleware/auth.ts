@@ -22,15 +22,18 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
 
     // Get user from session
     const user = req.user as any;
-    if (!user || !user.id) {
+    if (!user || (!user.id && !user.userId)) {
       return res.status(401).json({ 
         success: false, 
         error: 'Invalid user session' 
       });
     }
 
+    // Handle both id and userId properties
+    const userId = user.id || user.userId;
+    
     // Verify user exists in database
-    const dbUser = await dbManager.findUserById(user.id);
+    const dbUser = await dbManager.findUserById(userId);
     
     if (!dbUser) {
       return res.status(401).json({ 
@@ -41,7 +44,7 @@ export const requireAuth = async (req: AuthenticatedRequest, res: Response, next
 
     // Attach user info to request
     req.user = {
-      id: dbUser.id,
+      id: String(dbUser.id),
       email: dbUser.email
     };
 
