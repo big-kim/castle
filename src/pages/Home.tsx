@@ -10,6 +10,7 @@ import { getCoinIcon, getCoinInitial } from '@/utils/coinIcons';
 import { TokenSymbol } from '@/types';
 import { ReceiveModal } from '@/components/ReceiveModal';
 import { SendModal } from '@/components/SendModal';
+import { ICGiftCard } from '@/components/ICGiftCard';
 
 interface QuickActionProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -168,49 +169,7 @@ const TokenCard: React.FC<TokenCardProps> = ({ symbol, balance, usdtValue, chang
   );
 };
 
-interface GiftCardNFTProps {
-  id: string;
-  cardType: string;
-  faceValue: number;
-  currentBalance: number;
-}
 
-const GiftCardNFT: React.FC<GiftCardNFTProps & { onClick: () => void }> = ({ id, cardType, faceValue, currentBalance, onClick }) => {
-  const getCardImage = (cardType: string) => {
-    const imageMap = {
-      starbucks: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=starbucks%20gift%20card%20nft%20premium%20green%20design&image_size=landscape_4_3',
-      cgv: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=cgv%20cinema%20gift%20card%20nft%20red%20movie%20design&image_size=landscape_4_3',
-      lotte: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=lotte%20department%20store%20gift%20card%20nft%20luxury%20gold&image_size=landscape_4_3',
-    };
-    return imageMap[cardType as keyof typeof imageMap] || imageMap.starbucks;
-  };
-
-  const getCardName = (cardType: string) => {
-    // 모든 기프트 카드를 'IC Gift NFT'로 통일
-    return 'IC Gift NFT';
-  };
-
-  return (
-    <div 
-      className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:border-gray-300 transition-all duration-200 active:scale-[0.98]"
-      onClick={onClick}
-    >
-      <div className="aspect-[4/3] rounded-xl overflow-hidden mb-3">
-        <img
-          src={getCardImage(cardType)}
-          alt={`${getCardName(cardType)} Gift Card`}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <div className="space-y-1">
-        <h4 className="font-medium text-gray-900 text-sm">{getCardName(cardType)}</h4>
-        <p className="text-xs text-gray-500">
-          {formatCurrency(currentBalance)} / {formatCurrency(faceValue)}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -319,6 +278,11 @@ export const Home: React.FC = () => {
 
 
 
+  // 목업 데이터의 총 자산 계산
+  const calculateTotalAssets = () => {
+    return bnbTokens.reduce((total, token) => total + token.usdtValue, 0);
+  };
+
   // 초기 로딩 상태 - 모든 데이터가 로딩 중일 때만 전체 로딩 화면 표시
   const isInitialLoading = assetsLoading && walletLoading && !summary && !overview;
   
@@ -340,10 +304,10 @@ export const Home: React.FC = () => {
         <h2 className="text-lg font-medium mb-4">총 자산</h2>
         <div className="space-y-2">
           <p className="text-3xl font-bold">
-            ${formatCurrency(overview?.totalValue || summary?.total_value_usdt || 0)}
+            ${formatCurrency(calculateTotalAssets())}
           </p>
           <p className="text-white/80 text-sm">
-            ≈ {formatTokenAmount(overview?.totalValue || summary?.total_value_usdt || 0, 2)} USDT
+            ≈ {formatTokenAmount(calculateTotalAssets(), 2)} USDT
           </p>
         </div>
       </div>
@@ -411,63 +375,36 @@ export const Home: React.FC = () => {
           </button>
         </div>
         
-        {giftsLoading || walletLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-100 rounded-xl h-32 animate-pulse"></div>
-            ))}
-          </div>
-        ) : (overview?.nftWallet?.nfts && overview.nftWallet.nfts.length > 0) || (userGiftCards && userGiftCards.length > 0) ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {/* Show NFT wallet items first, then fallback to gift cards */}
-            {overview?.nftWallet?.nfts ? 
-              overview.nftWallet.nfts.slice(0, 6).map((nft) => (
-                <div key={nft.id} className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-3 border border-purple-200">
-                  <div className="aspect-square bg-white rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={nft.metadata.image} 
-                      alt={nft.metadata.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.nextElementSibling!.classList.remove('hidden');
-                      }}
-                    />
-                    <div className="hidden w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">{nft.metadata.name.charAt(0)}</span>
-                    </div>
-                  </div>
-                  <h3 className="font-medium text-gray-900 text-sm truncate">{nft.metadata.name}</h3>
-                  <p className="text-xs text-gray-600 mt-1">{nft.metadata.description}</p>
-                </div>
-              )) :
-              userGiftCards?.slice(0, 6).map((card) => (
-                <GiftCardNFT
-                  key={card.id}
-                  id={card.id}
-                  cardType={card.card_type}
-                  faceValue={card.face_value}
-                  currentBalance={card.current_balance}
-                  onClick={() => navigate('/gift')}
-                />
-              ))
-            }
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-8 h-8 text-gray-400" />
-            </div>
-            <p className="text-gray-500 mb-4">아직 보유한 상품권 NFT가 없습니다</p>
-            <button 
-              onClick={() => navigate('/gift')}
-              className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              상품권 구매하기
-            </button>
-          </div>
-        )}
+        <div className="grid grid-cols-2 gap-3">
+          <ICGiftCard
+            id="ic-10000"
+            denomination={10000}
+            currentBalance={10000}
+            displayMode="wallet"
+            onClick={() => navigate('/gift?tab=my-cards')}
+          />
+          <ICGiftCard
+            id="ic-50000"
+            denomination={50000}
+            currentBalance={50000}
+            displayMode="wallet"
+            onClick={() => navigate('/gift?tab=my-cards')}
+          />
+          <ICGiftCard
+            id="ic-100000"
+            denomination={100000}
+            currentBalance={100000}
+            displayMode="wallet"
+            onClick={() => navigate('/gift?tab=my-cards')}
+          />
+          <ICGiftCard
+            id="ic-500000"
+            denomination={500000}
+            currentBalance={500000}
+            displayMode="wallet"
+            onClick={() => navigate('/gift?tab=my-cards')}
+          />
+        </div>
       </div>
 
       {/* Modals */}

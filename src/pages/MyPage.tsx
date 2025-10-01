@@ -96,8 +96,9 @@ const NotificationSection: React.FC = () => {
   const { user, updateSettings } = useUserStore();
 
   const handleNotificationToggle = (type: 'p2p' | 'deposits' | 'withdrawals', enabled: boolean) => {
+    const currentSettings = user?.settings || {};
     updateSettings({
-      ...user?.settings,
+      ...currentSettings,
       notifications: enabled
     });
   };
@@ -123,7 +124,7 @@ const NotificationSection: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user?.settings.notifications || false}
+              checked={user?.settings?.notifications || false}
               onChange={(e) => handleNotificationToggle('p2p', e.target.checked)}
               className="sr-only peer"
             />
@@ -144,7 +145,7 @@ const NotificationSection: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user?.settings.notifications || false}
+              checked={user?.settings?.notifications || false}
               onChange={(e) => handleNotificationToggle('deposits', e.target.checked)}
               className="sr-only peer"
             />
@@ -165,7 +166,7 @@ const NotificationSection: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user?.settings.notifications || false}
+              checked={user?.settings?.notifications || false}
               onChange={(e) => handleNotificationToggle('withdrawals', e.target.checked)}
               className="sr-only peer"
             />

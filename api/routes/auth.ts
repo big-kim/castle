@@ -98,8 +98,8 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Verify Turnstile token
-    if (!turnstileToken) {
+    // Verify Turnstile token (skip in development for testing)
+    if (!turnstileToken && process.env.NODE_ENV !== 'development') {
       res.status(400).json({
         success: false,
         message: 'Turnstile verification is required'
@@ -361,6 +361,89 @@ router.post('/apple/callback',
     }
   }
 );
+
+/**
+ * Test Social Login (for development)
+ * POST /api/auth/test-social-login
+ */
+router.post('/test-social-login', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { provider } = req.body;
+
+    if (!provider || !['kakao', 'google', 'apple'].includes(provider)) {
+      res.status(400).json({
+        success: false,
+        message: 'Valid provider (kakao, google, apple) is required'
+      });
+      return;
+    }
+
+    // Create test user data based on provider
+    const testUsers = {
+      kakao: {
+        id: 'test-kakao-user',
+        email: 'test.kakao@example.com',
+        name: '카카오 테스트 사용자',
+        provider: 'kakao',
+        avatar: 'https://via.placeholder.com/100/FEE500/000000?text=K'
+      },
+      google: {
+        id: 'test-google-user',
+        email: 'test.google@example.com',
+        name: '구글 테스트 사용자',
+        provider: 'google',
+        avatar: 'https://via.placeholder.com/100/4285F4/FFFFFF?text=G'
+      },
+      apple: {
+        id: 'test-apple-user',
+        email: 'test.apple@example.com',
+        name: 'Apple 테스트 사용자',
+        provider: 'apple',
+        avatar: 'https://via.placeholder.com/100/000000/FFFFFF?text=A'
+      }
+    };
+
+    const testUser = testUsers[provider as keyof typeof testUsers];
+
+    // Check if user exists in database, if not create one
+    let user = await dbManager.findUserByEmail(testUser.email);
+    
+    if (!user) {
+      // Create test user in database
+      user = await dbManager.createUser({
+        email: testUser.email,
+        name: testUser.name,
+        provider: testUser.provider,
+        providerId: testUser.id,
+        avatar: testUser.avatar
+      });
+    }
+
+    // Generate JWT token
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      message: `Test ${provider} login successful`,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          provider: user.provider,
+          avatar: user.avatar
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Test social login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error during test social login'
+    });
+  }
+});
 
 /**
  * Turnstile Verification

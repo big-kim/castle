@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUserStore } from '../stores/userStore';
 import { cn } from '../lib/utils';
@@ -29,11 +29,16 @@ const AppleIcon = () => (
 
 export function Login() {
   const navigate = useNavigate();
-  const { socialLogin } = useUserStore();
+  const { socialLogin, isAuthenticated } = useUserStore();
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
 
-
+  // Auto redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSocialLogin = async (provider: 'kakao' | 'google' | 'apple') => {
     setSocialLoading(provider);
@@ -41,10 +46,14 @@ export function Login() {
     
     try {
       await socialLogin(provider);
+      // Show success toast
+      toast.success(`${provider === 'kakao' ? '카카오' : provider === 'google' ? '구글' : 'Apple'} 로그인 성공!`);
+      // Navigate to home page
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Social login error:', error);
       setError(error instanceof Error ? error.message : 'Social login failed');
-      toast.error('Social login failed. Please try again.');
+      toast.error('소셜 로그인에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setSocialLoading(null);
     }
@@ -87,11 +96,12 @@ export function Login() {
             {/* Kakao Login */}
             <button
               onClick={() => handleSocialLogin('kakao')}
-              disabled={socialLoading === 'kakao'}
+              disabled={!!socialLoading}
               className={cn(
-                "w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium transition-all duration-200",
+                "w-full flex items-center justify-center gap-3 px-4 py-3 border border-transparent rounded-lg text-sm font-medium transition-all duration-200",
                 "bg-[#FEE500] text-[#000000] hover:bg-[#FDD835] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FEE500]",
-                socialLoading === 'kakao' && "opacity-50 cursor-not-allowed"
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                socialLoading === 'kakao' && "bg-[#FDD835]"
               )}
             >
               {socialLoading === 'kakao' ? (
@@ -99,17 +109,18 @@ export function Login() {
               ) : (
                 <KakaoIcon />
               )}
-              <span>카카오로 시작하기</span>
+              <span>{socialLoading === 'kakao' ? '로그인 중...' : '카카오로 시작하기'}</span>
             </button>
 
             {/* Google Login */}
             <button
               onClick={() => handleSocialLogin('google')}
-              disabled={socialLoading === 'google'}
+              disabled={!!socialLoading}
               className={cn(
-                "w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium transition-all duration-200",
+                "w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium transition-all duration-200",
                 "bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-                socialLoading === 'google' && "opacity-50 cursor-not-allowed"
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                socialLoading === 'google' && "bg-gray-50"
               )}
             >
               {socialLoading === 'google' ? (
@@ -117,17 +128,18 @@ export function Login() {
               ) : (
                 <GoogleIcon />
               )}
-              <span>구글로 시작하기</span>
+              <span>{socialLoading === 'google' ? '로그인 중...' : '구글로 시작하기'}</span>
             </button>
 
             {/* Apple Login */}
             <button
               onClick={() => handleSocialLogin('apple')}
-              disabled={socialLoading === 'apple'}
+              disabled={!!socialLoading}
               className={cn(
-                "w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium transition-all duration-200",
+                "w-full flex items-center justify-center gap-3 px-4 py-3 border border-transparent rounded-lg text-sm font-medium transition-all duration-200",
                 "bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500",
-                socialLoading === 'apple' && "opacity-50 cursor-not-allowed"
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                socialLoading === 'apple' && "bg-gray-800"
               )}
             >
               {socialLoading === 'apple' ? (
@@ -135,7 +147,7 @@ export function Login() {
               ) : (
                 <AppleIcon />
               )}
-              <span>Apple로 시작하기</span>
+              <span>{socialLoading === 'apple' ? '로그인 중...' : 'Apple로 시작하기'}</span>
             </button>
           </div>
 

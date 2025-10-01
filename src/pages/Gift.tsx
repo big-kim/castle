@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { Search, Filter, QrCode, ShoppingCart, Star, Gift as GiftIcon, CreditCard, Smartphone, Coins, Package, Award, X, Check, Loader2 } from 'lucide-react';
 import { useGiftStore } from '@/stores/giftStore';
 import { useUserStore } from '@/stores/userStore';
@@ -7,6 +8,7 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { GiftCardProduct, GiftCard } from '@/types';
 import { toast } from 'sonner';
 import { TabButton, LoadingSpinner, EmptyState } from '@/components/common';
+import ICGiftCard from '../components/ICGiftCard';
 
 type TabType = 'store' | 'my-cards' | 'qr-pay';
 type ProductType = 'ic-gift-nft' | 'existing-gift-cards' | 'general-products';
@@ -291,84 +293,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   );
 };
 
-// IC Gift Card NFT Component (Main Featured)
-interface ICGiftNFTProps {
-  denomination: number;
-  price: number;
-  discount?: number;
-  onPurchase: (denomination: number) => void;
-}
 
-const ICGiftNFTCard: React.FC<ICGiftNFTProps> = ({ denomination, price, discount = 0, onPurchase }) => {
-  return (
-    <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-3xl shadow-2xl overflow-hidden border border-purple-200 transform hover:scale-105 transition-all duration-300">
-      {/* Premium NFT Header */}
-      <div className="relative p-5 text-white">
-        {/* Decorative Elements */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-3 left-3 w-12 h-12 border-2 border-white rounded-full"></div>
-          <div className="absolute top-3 right-3 w-8 h-8 border border-white rounded-full"></div>
-          <div className="absolute bottom-3 left-3 w-6 h-6 border border-white rounded-full"></div>
-          <div className="absolute bottom-3 right-3 w-16 h-16 border-2 border-white rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 border border-white rounded-full"></div>
-        </div>
-        
-        {/* NFT Badge */}
-        <div className="relative z-10 flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="text-4xl">🎫</div>
-            <div>
-              <h3 className="text-xl font-bold">IC 상품권 NFT</h3>
-              <p className="text-purple-100 text-sm">프리미엄 디지털 상품권</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Denomination Display */}
-        <div className="relative z-10 text-center">
-          <p className="text-sm opacity-90 mb-1">상품권 금액</p>
-          <p className="text-4xl font-bold mb-3">{denomination.toLocaleString()}원</p>
-          <div className="flex items-center justify-center space-x-4">
-            <div className="text-center">
-              <p className="text-xs opacity-75">판매가격</p>
-              <p className="text-xl font-semibold">{formatCurrency(price)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Purchase Section */}
-      <div className="bg-white p-4">
-        <div className="space-y-3">
-          {/* Features */}
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            <div className="text-center">
-              <Award className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-              <p className="text-gray-600">NFT 인증</p>
-            </div>
-            <div className="text-center">
-              <Coins className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-              <p className="text-gray-600">USDT/ICF</p>
-            </div>
-            <div className="text-center">
-              <QrCode className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-              <p className="text-gray-600">QR 결제</p>
-            </div>
-          </div>
-          
-          {/* Purchase Button */}
-          <button
-            onClick={() => onPurchase(denomination)}
-            className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold text-base rounded-2xl hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            <span>구매하기</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Existing Gift Cards Component (Smaller)
 interface ExistingGiftCardProps {
@@ -642,6 +567,138 @@ const GiftCardItem: React.FC<GiftCardProps> = ({ product, onPurchase }) => {
           <ShoppingCart className="w-4 h-4" />
           <span>{product.stock > 0 ? 'Purchase Now' : 'Out of Stock'}</span>
         </button>
+      </div>
+    </div>
+  );
+};
+
+// IC Gift NFT Card for My Cards Tab
+
+
+// Purchase Detail Modal
+interface PurchaseDetailModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  nftData: {
+    id: string;
+    denomination: number;
+    currentBalance: number;
+    purchaseDate: string;
+    status: 'active' | 'used' | 'expired';
+    transactionHash: string;
+    purchasePrice: number;
+  } | null;
+}
+
+const PurchaseDetailModal: React.FC<PurchaseDetailModalProps> = ({ isOpen, onClose, nftData }) => {
+  if (!isOpen || !nftData) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-900">구매 내역 상세</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* NFT Image */}
+          <div className="text-center">
+            <img
+              src="https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=ic%20gift%20card%20nft%20premium%20blue%20modern%20design&image_size=square"
+              alt="IC Gift NFT"
+              className="w-32 h-32 object-cover rounded-xl mx-auto mb-4"
+            />
+            <h3 className="text-lg font-semibold text-gray-900">IC Gift NFT</h3>
+            <p className="text-sm text-gray-500">#{nftData.id.slice(-8)}</p>
+          </div>
+
+          {/* Details */}
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+              <h4 className="font-medium text-gray-900">기본 정보</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">액면가</span>
+                  <span className="font-medium">{nftData.denomination.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">현재 잔액</span>
+                  <span className="font-medium text-primary">{nftData.currentBalance.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">상태</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    nftData.status === 'active' ? 'bg-green-100 text-green-800' :
+                    nftData.status === 'used' ? 'bg-gray-100 text-gray-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {nftData.status === 'active' ? '사용 가능' :
+                     nftData.status === 'used' ? '사용 완료' : '만료됨'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+              <h4 className="font-medium text-gray-900">구매 정보</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">구매일</span>
+                  <span className="font-medium">{nftData.purchaseDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">구매 가격</span>
+                  <span className="font-medium">{nftData.purchasePrice.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">할인율</span>
+                  <span className="font-medium text-green-600">
+                    {Math.round(((nftData.denomination - nftData.purchasePrice) / nftData.denomination) * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+              <h4 className="font-medium text-gray-900">블록체인 정보</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">트랜잭션 해시</span>
+                  <span className="font-mono text-xs text-gray-500 break-all">
+                    {nftData.transactionHash}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">네트워크</span>
+                  <span className="font-medium">BNB Smart Chain</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+            >
+              닫기
+            </button>
+            {nftData.status === 'active' && (
+              <button className="flex-1 bg-primary text-white py-3 rounded-xl font-medium hover:bg-primary/90 transition-colors">
+                사용하기
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -928,10 +985,15 @@ const QRPayment: React.FC<QRPaymentProps> = ({ onGeneratePaymentQR }) => {
 };
 
 export const Gift: React.FC = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('store');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProductType, setSelectedProductType] = useState<ProductType>('ic-gift-nft');
+  const [purchaseDetailModal, setPurchaseDetailModal] = useState<{
+    isOpen: boolean;
+    nftData: any;
+  }>({ isOpen: false, nftData: null });
   
   const { 
     products, 
@@ -952,6 +1014,46 @@ export const Gift: React.FC = () => {
     { denomination: 50000, price: 48, discount: 4 },
     { denomination: 100000, price: 95, discount: 5 },
     { denomination: 500000, price: 470, discount: 6 },
+  ];
+
+  // Mock IC Gift NFT data for My Cards tab
+  const myICGiftNFTs = [
+    {
+      id: 'ic-nft-001',
+      denomination: 10000,
+      currentBalance: 8500,
+      purchaseDate: '2024-01-15',
+      status: 'active' as const,
+      transactionHash: '0x1234567890abcdef1234567890abcdef12345678',
+      purchasePrice: 9500
+    },
+    {
+      id: 'ic-nft-002',
+      denomination: 50000,
+      currentBalance: 42000,
+      purchaseDate: '2024-01-20',
+      status: 'active' as const,
+      transactionHash: '0xabcdef1234567890abcdef1234567890abcdef12',
+      purchasePrice: 47500
+    },
+    {
+      id: 'ic-nft-003',
+      denomination: 100000,
+      currentBalance: 0,
+      purchaseDate: '2024-01-10',
+      status: 'used' as const,
+      transactionHash: '0x567890abcdef1234567890abcdef1234567890ab',
+      purchasePrice: 95000
+    },
+    {
+      id: 'ic-nft-004',
+      denomination: 500000,
+      currentBalance: 500000,
+      purchaseDate: '2024-01-25',
+      status: 'active' as const,
+      transactionHash: '0xcdef1234567890abcdef1234567890abcdef1234',
+      purchasePrice: 475000
+    }
   ];
 
   // Existing Gift Cards Data (Mock)
@@ -1124,6 +1226,20 @@ export const Gift: React.FC = () => {
     },
   ];
 
+  // Handle URL query parameters for tab selection
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    
+    if (tabParam === 'my-cards') {
+      setActiveTab('my-cards');
+    } else if (tabParam === 'qr-pay') {
+      setActiveTab('qr-pay');
+    } else if (tabParam === 'store') {
+      setActiveTab('store');
+    }
+  }, [location.search]);
+
   useEffect(() => {
     fetchProducts();
     if (user) {
@@ -1222,6 +1338,13 @@ export const Gift: React.FC = () => {
         }
       });
     }
+  };
+
+  const handleICNFTClick = (nft: any) => {
+    setPurchaseDetailModal({
+      isOpen: true,
+      nftData: nft
+    });
   };
 
   // Purchase confirmation handler
@@ -1464,11 +1587,12 @@ export const Gift: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {icGiftNFTs.map((nft, index) => (
-                  <ICGiftNFTCard
+                  <ICGiftCard
                     key={index}
                     denomination={nft.denomination}
                     price={nft.price}
                     discount={nft.discount}
+                    displayMode="store"
                     onPurchase={(denomination) => handleICGiftNFTPurchase(denomination)}
                   />
                 ))}
@@ -1532,38 +1656,55 @@ export const Gift: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">내 기프트 카드</h2>
-            <button className="text-primary text-sm font-medium">
-              전체 보기
-            </button>
           </div>
           
+          {/* IC Gift NFTs Section */}
           <div className="space-y-4">
-            {userGiftCards.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">💳</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  아직 기프트 카드가 없습니다
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  스토어에서 기프트 카드를 구매하면 여기에 표시됩니다.
-                </p>
-                <button
-                  onClick={() => setActiveTab('store')}
-                  className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary/90 transition-colors"
-                >
-                  스토어 둘러보기
-                </button>
-              </div>
-            ) : (
-              userGiftCards.map((giftCard) => (
-                <MyGiftCard
-                  key={giftCard.id}
-                  giftCard={giftCard}
-                  onGenerateQR={handleGenerateQR}
-                  onUseCard={handleUseCard}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">IC상품권 NFT</h3>
+              <span className="text-sm text-gray-500">{myICGiftNFTs.length}개 보유</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {myICGiftNFTs.map((nft) => (
+                <ICGiftCard
+                  key={nft.id}
+                  id={nft.id}
+                  denomination={nft.denomination}
+                  currentBalance={nft.currentBalance}
+                  purchaseDate={nft.purchaseDate}
+                  status={nft.status}
+                  displayMode="my-cards"
+                  onClick={() => handleICNFTClick(nft)}
                 />
-              ))
-            )}
+              ))}
+            </div>
+          </div>
+
+          {/* Existing Gift Cards Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">기성 상품권</h3>
+              <span className="text-sm text-gray-500">{userGiftCards.length}개 보유</span>
+            </div>
+            
+            <div className="space-y-4">
+              {userGiftCards.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-3">💳</div>
+                  <p className="text-gray-500">보유한 기성 상품권이 없습니다.</p>
+                </div>
+              ) : (
+                userGiftCards.map((giftCard) => (
+                  <MyGiftCard
+                    key={giftCard.id}
+                    giftCard={giftCard}
+                    onGenerateQR={handleGenerateQR}
+                    onUseCard={handleUseCard}
+                  />
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1583,6 +1724,13 @@ export const Gift: React.FC = () => {
         productInfo={purchaseModal.productInfo}
         onConfirm={handlePurchaseConfirm}
         isLoading={isProcessingPurchase}
+      />
+
+      {/* Purchase Detail Modal */}
+      <PurchaseDetailModal
+        isOpen={purchaseDetailModal.isOpen}
+        onClose={() => setPurchaseDetailModal({ isOpen: false, nftData: null })}
+        nftData={purchaseDetailModal.nftData}
       />
     </div>
   );

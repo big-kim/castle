@@ -3,6 +3,7 @@ import { X, Send, QrCode, User, AlertCircle, ChevronDown } from 'lucide-react';
 import { useWalletStore } from '../stores/walletStore';
 import { getCoinIcon, getCoinInitial } from '../utils/coinIcons';
 import { toast } from 'sonner';
+import { QRScanner } from './QRScanner';
 
 interface SendModalProps {
   isOpen: boolean;
@@ -144,9 +145,20 @@ export const SendModal: React.FC<SendModalProps> = ({
   };
 
   const handleQRScan = () => {
-    // TODO: Implement QR code scanning
     setShowQRScanner(true);
-    toast.info('QR 스캔 기능은 곧 추가될 예정입니다');
+  };
+
+  const handleQRScanSuccess = (address: string) => {
+    setRecipient(address);
+    setShowQRScanner(false);
+    // Clear any existing recipient errors
+    if (errors.recipient) {
+      setErrors(prev => ({ ...prev, recipient: '' }));
+    }
+  };
+
+  const handleQRScanClose = () => {
+    setShowQRScanner(false);
   };
 
   if (!isOpen) return null;
@@ -225,11 +237,11 @@ export const SendModal: React.FC<SendModalProps> = ({
                           </div>
                           <div className="text-left">
                             <div className="font-medium text-gray-900">{token.symbol}</div>
-                            <div className="text-xs text-gray-500">{token.balance.toFixed(6)}</div>
+                            <div className="text-xs text-gray-500">{(token.balance || 0).toFixed(6)}</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900">${token.usdtValue.toFixed(2)}</div>
+                          <div className="text-sm font-medium text-gray-900">${(token.usdtValue || 0).toFixed(2)}</div>
                         </div>
                       </button>
                     ))}
@@ -394,6 +406,13 @@ export const SendModal: React.FC<SendModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      <QRScanner
+        isOpen={showQRScanner}
+        onClose={handleQRScanClose}
+        onScanSuccess={handleQRScanSuccess}
+      />
     </div>
   );
 };

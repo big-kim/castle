@@ -250,6 +250,76 @@ export interface WithdrawalHistory {
   fee?: number;
 }
 
+export interface MiningSession {
+  id: string;
+  userId: string;
+  coinSymbol: string;
+  hashPower: number;
+  startTime: string;
+  endTime?: string;
+  isActive: boolean;
+  totalEarnings: number;
+}
+
+export interface MiningEarning {
+  id: string;
+  userId: string;
+  sessionId: string;
+  coinSymbol: string;
+  amount: number;
+  hashPower: number;
+  timestamp: string;
+}
+
+export interface MiningWithdrawal {
+  id: string;
+  userId: string;
+  coinSymbol: string;
+  amount: number;
+  fee: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: string;
+  processedAt?: string;
+}
+
+export interface MineableCoinData {
+  symbol: MineableCoin;
+  name: string;
+  hashrate: number;
+  earnings: number;
+  difficulty: number;
+  blockReward: number;
+  estimatedDailyEarnings: number;
+}
+
+export interface MiningActivity {
+  id: string;
+  type: 'mining';
+  coinSymbol: MineableCoin;
+  amount: number;
+  timestamp: string;
+  status: 'completed' | 'pending';
+}
+
+export interface MiningOverviewData {
+  totalHashrate: number;
+  totalEarnings: number;
+  activeMachines: number;
+  dailyEarnings: number;
+  mineableCoins: MineableCoinData[];
+  recentActivities: MiningActivity[];
+}
+
+export interface SimpleMiningStore {
+  miningData: MiningOverviewData | null;
+  isLoading: boolean;
+  activeMiningCoins: MineableCoin[];
+  fetchMiningData: () => Promise<void>;
+  startMining: (coinSymbol: MineableCoin) => Promise<void>;
+  stopMining: (coinSymbol: MineableCoin) => Promise<void>;
+  refreshMiningData: () => Promise<void>;
+}
+
 // ============================================================================
 // FINANCE (STAKING, LENDING, LOANS)
 // ============================================================================
@@ -440,6 +510,7 @@ export interface UserStore {
   refreshUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
+  initialize: () => Promise<void>;
 }
 
 export interface AssetStore {
@@ -531,6 +602,14 @@ export interface WalletOverview {
 
 export interface WalletStore {
   overview: WalletOverview | null;
+  qrData: { address: string; qrCode?: string } | null;
+  bnbTransactions: any[];
+  pointTransactions: any[];
+  nftTransactions: any[];
   isLoading: boolean;
   fetchWalletOverview: () => Promise<void>;
+  generateQRCode: (assetType: string, amount?: number, memo?: string, tokenSymbol?: string) => Promise<void>;
+  fetchBNBTransactions: () => Promise<any[]>;
+  fetchPointTransactions: () => Promise<any[]>;
+  fetchNFTTransactions: () => Promise<any[]>;
 }

@@ -16,6 +16,9 @@ import passport from './passport.js'
 import { dbManager } from './database.js'
 import authRoutes from './routes/auth.js'
 import walletRoutes from './routes/wallet.js'
+import p2pRoutes from './routes/p2p.js'
+import miningRoutes from './routes/mining.js'
+import giftRoutes from './routes/gift.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -23,9 +26,6 @@ const __dirname = path.dirname(__filename)
 
 // load env
 dotenv.config()
-
-// Initialize database
-dbManager.initialize().catch(console.error);
 
 const app: express.Application = express()
 
@@ -51,11 +51,18 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+// Initialize database first
+await dbManager.initialize();
+console.log('Database initialized successfully');
+
 /**
  * API Routes
  */
 app.use('/api/auth', authRoutes)
 app.use('/api/wallet', walletRoutes)
+app.use('/api/p2p', p2pRoutes)
+app.use('/api/mining', miningRoutes)
+app.use('/api/gift', giftRoutes)
 
 /**
  * health

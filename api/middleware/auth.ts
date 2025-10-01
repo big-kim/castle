@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { DatabaseManager, dbManager } from '../database';
 import jwt from 'jsonwebtoken';
+import { extractTokenFromHeader } from '../utils/jwt.js';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -173,21 +174,20 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
 export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
+    const token = extractTokenFromHeader(authHeader);
+    
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Access token required'
+        error: 'Authentication required'
       });
     }
 
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
-      console.error('JWT_SECRET not configured');
       return res.status(500).json({
         success: false,
-        message: 'Server configuration error'
+        error: 'JWT secret not configured'
       });
     }
 
@@ -195,7 +195,7 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
     const decoded = jwt.verify(token, jwtSecret) as any;
     
     // Verify user exists in database
-    const dbUser = await dbManager.findUserById(decoded.id);
+    const dbUser = await dbManager.findUserById(decoded.userId);
     if (!dbUser) {
       return res.status(401).json({
         success: false,

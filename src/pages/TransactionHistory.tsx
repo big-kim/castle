@@ -10,17 +10,22 @@ interface Transaction {
   type: 'send' | 'receive';
   assetType: 'bnb' | 'point' | 'nft';
   coinType?: string;
+  coinSymbol?: string;
   amount?: number;
+  value?: number;
   toAddress?: string;
   fromAddress?: string;
   status: 'pending' | 'completed' | 'failed';
   timestamp: string;
+  createdAt?: string;
   txHash?: string;
   memo?: string;
+  paymentMethod?: string;
 }
 
 export const TransactionHistory: React.FC = () => {
   const navigate = useNavigate();
+  const walletStore = useWalletStore();
   const { 
     bnbTransactions, 
     pointTransactions, 
@@ -29,7 +34,7 @@ export const TransactionHistory: React.FC = () => {
     fetchPointTransactions,
     fetchNFTTransactions,
     isLoading 
-  } = useWalletStore();
+  } = walletStore || {};
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<'all' | 'token' | 'nft'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,36 +43,98 @@ export const TransactionHistory: React.FC = () => {
 
   useEffect(() => {
     loadTransactions();
-    fetchBNBTransactions();
-    fetchNFTTransactions();
+    if (typeof fetchBNBTransactions === 'function') {
+      fetchBNBTransactions().catch(error => {
+        console.error('Failed to fetch BNB transactions:', error);
+      });
+    }
+    if (typeof fetchNFTTransactions === 'function') {
+      fetchNFTTransactions().catch(error => {
+        console.error('Failed to fetch NFT transactions:', error);
+      });
+    }
   }, [fetchBNBTransactions, fetchNFTTransactions]);
 
   const loadTransactions = async () => {
     try {
-      // Fetch BNB transactions
-      const bnbTxs = await fetchBNBTransactions();
-      const formattedBnbTxs: Transaction[] = bnbTxs.map(tx => ({
-        id: tx.id,
-        type: tx.type as 'send' | 'receive',
-        assetType: 'bnb' as const,
-        amount: tx.amount,
-        toAddress: tx.toAddress,
-        fromAddress: tx.fromAddress,
-        status: tx.status as 'pending' | 'completed' | 'failed',
-        timestamp: tx.timestamp,
-        txHash: tx.txHash,
-        memo: tx.memo
-      }));
+      let allTransactions: Transaction[] = [];
 
-      // TODO: Fetch point and NFT transactions
-      // const pointTxs = await fetchPointTransactions();
-      // const nftTxs = await fetchNFTTransactions();
+      // Safely fetch BNB transactions
+      if (typeof fetchBNBTransactions === 'function') {
+        try {
+          const bnbTxs = await fetchBNBTransactions();
+          if (Array.isArray(bnbTxs)) {
+            const formattedBnbTxs: Transaction[] = bnbTxs.map(tx => ({
+              id: tx.id || 'unknown',
+              type: (tx.type as 'send' | 'receive') || 'receive',
+              assetType: 'bnb' as const,
+              amount: tx.amount || 0,
+              toAddress: tx.toAddress,
+              fromAddress: tx.fromAddress,
+              status: (tx.status as 'pending' | 'completed' | 'failed') || 'pending',
+              timestamp: tx.timestamp || new Date().toISOString(),
+              txHash: tx.txHash,
+              memo: tx.memo
+            }));
+            allTransactions = [...allTransactions, ...formattedBnbTxs];
+          }
+        } catch (bnbError) {
+          console.error('Failed to fetch BNB transactions:', bnbError);
+        }
+      } else {
+        console.warn('fetchBNBTransactions is not a function');
+      }
 
-      const allTransactions = [...formattedBnbTxs];
+      // Safely fetch point transactions
+      if (typeof fetchPointTransactions === 'function') {
+        try {
+          const pointTxs = await fetchPointTransactions();
+          if (Array.isArray(pointTxs)) {
+            const formattedPointTxs: Transaction[] = pointTxs.map(tx => ({
+              id: tx.id || 'unknown',
+              type: (tx.type as 'send' | 'receive') || 'receive',
+              assetType: 'point' as const,
+              coinType: tx.coinSymbol,
+              amount: tx.amount || 0,
+              status: (tx.status as 'pending' | 'completed' | 'failed') || 'pending',
+              timestamp: tx.timestamp || new Date().toISOString(),
+              memo: tx.memo
+            }));
+            allTransactions = [...allTransactions, ...formattedPointTxs];
+          }
+        } catch (pointError) {
+          console.error('Failed to fetch point transactions:', pointError);
+        }
+      }
+
+      // Safely fetch NFT transactions
+      if (typeof fetchNFTTransactions === 'function') {
+        try {
+          const nftTxs = await fetchNFTTransactions();
+          if (Array.isArray(nftTxs)) {
+            const formattedNftTxs: Transaction[] = nftTxs.map(tx => ({
+              id: tx.id || 'unknown',
+              type: (tx.type as 'send' | 'receive') || 'receive',
+              assetType: 'nft' as const,
+              amount: tx.value || 0,
+              toAddress: tx.toAddress,
+              status: (tx.status as 'pending' | 'completed' | 'failed') || 'pending',
+              timestamp: tx.timestamp || new Date().toISOString(),
+              memo: tx.memo
+            }));
+            allTransactions = [...allTransactions, ...formattedNftTxs];
+          }
+        } catch (nftError) {
+          console.error('Failed to fetch NFT transactions:', nftError);
+        }
+      }
+
+      // Sort transactions by timestamp
       allTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setTransactions(allTransactions);
     } catch (error) {
       console.error('Failed to load transactions:', error);
+      setTransactions([]); // Set empty array as fallback
     }
   };
 
@@ -122,30 +189,65 @@ export const TransactionHistory: React.FC = () => {
     }
   };
 
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs';
+      case 'failed':
+        return 'text-red-600 bg-red-50 px-2 py-1 rounded-full text-xs';
+      case 'pending':
+      default:
+        return 'text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full text-xs';
+    }
+  };
 
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 24 * 7) {
-      return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
-    } else {
-      return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+  const formatDate = (timestamp: string | undefined) => {
+    if (!timestamp) return '날짜 없음';
+    
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return '잘못된 날짜';
+      
+      const now = new Date();
+      const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+      if (diffInHours < 24) {
+        return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      } else if (diffInHours < 24 * 7) {
+        return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+      } else {
+        return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return '날짜 오류';
     }
   };
 
   const getAssetDisplayName = (tx: Transaction) => {
+    if (!tx) return 'Unknown';
     if (tx.assetType === 'bnb') return 'BNB';
     if (tx.assetType === 'point' && tx.coinType) return tx.coinType;
+    if (tx.assetType === 'point' && tx.coinSymbol) return tx.coinSymbol;
     if (tx.assetType === 'nft') return 'NFT';
     return 'Unknown';
   };
 
-  const truncateAddress = (address: string) => {
-    if (!address) return '';
+  const truncateAddress = (address: string | undefined) => {
+    if (!address || address.length < 10) return address || '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const safeFormatTokenAmount = (amount: number | undefined, symbol: string | undefined) => {
+    if (amount === undefined || amount === null) return '0';
+    if (!symbol) return amount.toString();
+    
+    try {
+      return formatTokenAmount(amount, symbol);
+    } catch (error) {
+      console.error('Token amount formatting error:', error);
+      return `${amount} ${symbol}`;
+    }
   };
 
   if (isLoading) {
@@ -271,7 +373,7 @@ export const TransactionHistory: React.FC = () => {
                       </div>
                       <div className="text-sm text-gray-500">
                         {activeTab === 'token' ? tx.coinSymbol?.toUpperCase() || 'BNB' : 
-                         'NFT'} • {formatDate(tx.createdAt)}
+                         'NFT'} • {formatDate(tx.createdAt || tx.timestamp)}
                       </div>
                     </div>
                   </div>
@@ -283,7 +385,7 @@ export const TransactionHistory: React.FC = () => {
                     }`}>
                       {tx.type === 'send' || tx.type === 'withdraw' ? '-' : 
                        tx.type === 'receive' || tx.type === 'earn' ? '+' : ''}
-                      {activeTab === 'token' ? formatTokenAmount(tx.amount || 0, tx.coinSymbol || 'BNB') :
+                      {activeTab === 'token' ? safeFormatTokenAmount(tx.amount, tx.coinSymbol || 'BNB') :
                        tx.value ? `$${tx.value}` : 'NFT'}
                     </div>
                     <div className="flex items-center gap-1 text-sm">
@@ -301,7 +403,7 @@ export const TransactionHistory: React.FC = () => {
                       {tx.type === 'send' || tx.type === 'withdraw' ? '받는 주소: ' : '보낸 주소: '}
                     </span>
                     <span className="font-mono">
-                      {tx.type === 'send' || tx.type === 'withdraw' ? tx.toAddress : tx.fromAddress}
+                      {truncateAddress(tx.type === 'send' || tx.type === 'withdraw' ? tx.toAddress : tx.fromAddress)}
                     </span>
                   </div>
                 )}
@@ -324,7 +426,7 @@ export const TransactionHistory: React.FC = () => {
                   <div className="text-sm text-gray-600">
                     <span className="font-medium">트랜잭션 해시: </span>
                     <span className="font-mono text-blue-600 cursor-pointer hover:underline">
-                      {tx.txHash.slice(0, 10)}...{tx.txHash.slice(-8)}
+                      {truncateAddress(tx.txHash)}
                     </span>
                   </div>
                 )}

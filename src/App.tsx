@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
@@ -13,6 +14,7 @@ import { Finance } from './pages/Finance';
 import { Gift } from './pages/Gift';
 import { MyPage } from './pages/MyPage';
 import { useUserStore } from './stores/userStore';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -31,38 +33,75 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/auth/success" element={<AuthSuccess />} />
-          
-          {/* Protected Routes */}
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/wallet" replace />} />
-            <Route path="wallet" element={<Home />} />
-            <Route path="wallet/transactions" element={<TransactionHistory />} />
-            <Route path="p2p" element={<P2P />} />
-            <Route path="mining" element={<Mining />} />
-            <Route path="finance" element={<Finance />} />
-            <Route path="gift" element={<Gift />} />
-            <Route path="mypage" element={<MyPage />} />
-          </Route>
-          
+  const { initialize } = useUserStore();
 
-          
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </QueryClientProvider>
+  // Initialize authentication state on app startup
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/success" element={<AuthSuccess />} />
+            
+            {/* Protected Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/wallet" replace />} />
+              <Route path="wallet" element={
+                <ErrorBoundary>
+                  <Home />
+                </ErrorBoundary>
+              } />
+              <Route path="wallet/transactions" element={
+                <ErrorBoundary>
+                  <TransactionHistory />
+                </ErrorBoundary>
+              } />
+              <Route path="p2p" element={
+                <ErrorBoundary>
+                  <P2P />
+                </ErrorBoundary>
+              } />
+              <Route path="mining" element={
+                <ErrorBoundary>
+                  <Mining />
+                </ErrorBoundary>
+              } />
+              <Route path="finance" element={
+                <ErrorBoundary>
+                  <Finance />
+                </ErrorBoundary>
+              } />
+              <Route path="gift" element={
+                <ErrorBoundary>
+                  <Gift />
+                </ErrorBoundary>
+              } />
+              <Route path="mypage" element={
+                <ErrorBoundary>
+                  <MyPage />
+                </ErrorBoundary>
+              } />
+            </Route>
+            
+
+            
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

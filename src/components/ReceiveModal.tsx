@@ -17,10 +17,12 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
   assetType,
   coinType
 }) => {
-  const { generateQRCode, qrData, isLoading, overview } = useWalletStore();
+  const walletStore = useWalletStore();
+  const { generateQRCode, qrData, isLoading, overview } = walletStore || {};
   const [selectedToken, setSelectedToken] = useState('BNB');
   const [showTokenDropdown, setShowTokenDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Available tokens
   const availableTokens = [
@@ -68,13 +70,28 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      const tokenToSet = coinType || 'BNB';
-      setSelectedToken(tokenToSet);
-      setShowTokenDropdown(false);
-      setCopied(false);
-      // Generate QR code when modal opens
-      console.log('Generating QR code for:', { assetType, tokenToSet });
-      generateQRCode(assetType, undefined, undefined, tokenToSet);
+      try {
+        const tokenToSet = coinType || 'BNB';
+        setSelectedToken(tokenToSet);
+        setShowTokenDropdown(false);
+        setCopied(false);
+        setError(null);
+        
+        // Generate QR code when modal opens
+        console.log('Generating QR code for:', { assetType, tokenToSet });
+        if (typeof generateQRCode === 'function') {
+          generateQRCode(assetType, undefined, undefined, tokenToSet).catch((err) => {
+            console.error('Failed to generate QR code:', err);
+            setError('QR 코드 생성에 실패했습니다.');
+          });
+        } else {
+          console.error('generateQRCode is not a function');
+          setError('QR 코드 생성 기능을 사용할 수 없습니다.');
+        }
+      } catch (err) {
+        console.error('Error in ReceiveModal useEffect:', err);
+        setError('모달 초기화 중 오류가 발생했습니다.');
+      }
     }
   }, [isOpen, assetType, coinType, generateQRCode]);
 
@@ -142,11 +159,25 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
   };
 
   const handleTokenChange = (tokenSymbol: string) => {
-    setSelectedToken(tokenSymbol);
-    setShowTokenDropdown(false);
-    // Generate new QR code for selected token
-    console.log('Token changed to:', tokenSymbol);
-    generateQRCode(assetType, undefined, undefined, tokenSymbol);
+    try {
+      setSelectedToken(tokenSymbol);
+      setShowTokenDropdown(false);
+      setError(null);
+      
+      // Generate new QR code for selected token
+      console.log('Token changed to:', tokenSymbol);
+      if (typeof generateQRCode === 'function') {
+        generateQRCode(assetType, undefined, undefined, tokenSymbol).catch((err) => {
+          console.error('Failed to generate QR code for token change:', err);
+          setError('QR 코드 생성에 실패했습니다.');
+        });
+      } else {
+        setError('QR 코드 생성 기능을 사용할 수 없습니다.');
+      }
+    } catch (err) {
+      console.error('Error in handleTokenChange:', err);
+      setError('토큰 변경 중 오류가 발생했습니다.');
+    }
   };
 
   if (!isOpen) return null;
@@ -167,6 +198,16 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
         </div>
 
         <div className="space-y-6">
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 text-red-500">⚠️</div>
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            </div>
+          )}
+
           {/* Token Selection Dropdown */}
           {assetType === 'bnb' && (
             <div className="space-y-2">
@@ -273,10 +314,13 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
                 ) : qrData?.qrCode ? (
-                  <div 
-                    className="w-48 h-48 flex items-center justify-center"
-                    dangerouslySetInnerHTML={{ __html: qrData.qrCode }}
-                  />
+                  <div className="w-48 h-48 flex items-center justify-center">
+                    <img 
+                      src={qrData.qrCode} 
+                      alt="QR Code"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 ) : (
                   <div className="w-48 h-48 flex items-center justify-center bg-gray-100 rounded-lg">
                     <div className="text-center">

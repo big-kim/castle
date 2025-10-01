@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User, UserStore, UserSettings } from '../types';
-import { createMockFetch, generateId } from '../utils/mockData';
 
 // ============================================================================
 // CONSTANTS
@@ -9,33 +8,6 @@ import { createMockFetch, generateId } from '../utils/mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3004/api';
 const TOKEN_KEY = 'ic-wallet-token';
-
-// ============================================================================
-// MOCK DATA GENERATORS
-// ============================================================================
-
-const generateMockUser = (provider?: 'kakao' | 'google' | 'apple'): User => ({
-  id: generateId(),
-  email: provider ? `user@${provider}.com` : 'user@example.com',
-  name: provider ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} User` : 'Test User',
-  avatar: null,
-  settings: {
-    language: 'ko',
-    theme: 'light',
-    notifications: {
-      email: true,
-      push: true,
-      sms: false
-    },
-    privacy: {
-      profileVisibility: 'public',
-      showEmail: false,
-      showPhone: false
-    }
-  },
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
-});
 
 // ============================================================================
 // API UTILITY FUNCTIONS
@@ -67,64 +39,75 @@ const createApiCall = (baseUrl: string) => {
 const apiCall = createApiCall(API_BASE_URL);
 
 // ============================================================================
-// MOCK API FUNCTIONS
+// REAL API FUNCTIONS
 // ============================================================================
 
-const mockLogin = createMockFetch(
-  (email: string, password: string, turnstileToken: string) => {
-    if (!email || !password) {
-      throw new Error('Email and password are required');
-    }
-    
-    const user = generateMockUser();
-    const token = `mock_token_${generateId()}`;
-    
-    return { user, token };
-  },
-  { delay: [800, 1500] }
-);
+const realLogin = async (email: string, password: string, turnstileToken: string) => {
+  const response = await apiCall('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, turnstileToken }),
+  });
+  
+  if (!response.success) {
+    throw new Error(response.message || 'Login failed');
+  }
+  
+  return {
+    user: response.data.user,
+    token: response.data.token
+  };
+};
 
-const mockRegister = createMockFetch(
-  (email: string, password: string, name: string, turnstileToken: string) => {
-    if (!email || !password || !name) {
-      throw new Error('All fields are required');
-    }
-    
-    const user = { ...generateMockUser(), email, name };
-    const token = `mock_token_${generateId()}`;
-    
-    return { user, token };
-  },
-  { delay: [1000, 2000] }
-);
+const realRegister = async (email: string, password: string, name: string, turnstileToken: string) => {
+  const response = await apiCall('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, name, turnstileToken }),
+  });
+  
+  if (!response.success) {
+    throw new Error(response.message || 'Registration failed');
+  }
+  
+  return {
+    user: response.data.user,
+    token: response.data.token
+  };
+};
 
-const mockLogout = createMockFetch(
-  () => ({ success: true }),
-  { delay: [300, 600] }
-);
+const realLogout = async () => {
+  const response = await apiCall('/auth/logout', {
+    method: 'POST',
+  });
+  
+  if (!response.success) {
+    throw new Error(response.message || 'Logout failed');
+  }
+  
+  return response;
+};
 
-const mockFetchUser = createMockFetch(
-  () => generateMockUser(),
-  { delay: [400, 800] }
-);
+const realFetchUser = async () => {
+  const response = await apiCall('/auth/me');
+  
+  if (!response.success) {
+    throw new Error(response.message || 'Failed to fetch user');
+  }
+  
+  return response.data.user;
+};
 
-const mockUpdateProfile = createMockFetch(
-  (updates: Partial<User>) => {
-    const user = generateMockUser();
-    return { ...user, ...updates, updatedAt: new Date().toISOString() };
-  },
-  { delay: [600, 1200] }
-);
+const realUpdateProfile = async (updates: Partial<User>) => {
+  // For now, return the user with updates since there's no update profile endpoint yet
+  // This can be implemented when the backend endpoint is available
+  const user = await realFetchUser();
+  return { ...user, ...updates, updatedAt: new Date().toISOString() };
+};
 
-const mockSocialLogin = createMockFetch(
-  (provider: 'kakao' | 'google' | 'apple') => {
-    const user = generateMockUser(provider);
-    const token = `mock_${provider}_token_${generateId()}`;
-    
-    return { user, token };
-  },
-  { delay: [1000, 1500] }
-);
+const realSocialLogin = async (provider: 'kakao' | 'google' | 'apple') => {
+  // Social login is handled via OAuth redirects, not direct API calls
+  // This function is mainly for consistency, actual social login happens via OAuth flow
+  throw new Error(`Social login for ${provider} should be handled via OAuth redirect`);
+};
 
 // ============================================================================
 // TOKEN MANAGEMENT
@@ -167,7 +150,7 @@ export const useUserStore = create<UserStore>()(
       login: async (email: string, password: string, turnstileToken: string) => {
         set({ isLoading: true });
         try {
-          const { user, token } = await mockLogin(email, password, turnstileToken);
+          const { user, token } = await realLogin(email, password, turnstileToken);
           get().setToken(token);
           set({ user, isAuthenticated: true, isLoading: false });
         } catch (error) {
@@ -179,7 +162,7 @@ export const useUserStore = create<UserStore>()(
       register: async (email: string, password: string, name: string, turnstileToken: string) => {
         set({ isLoading: true });
         try {
-          const { user, token } = await mockRegister(email, password, name, turnstileToken);
+          const { user, token } = await realRegister(email, password, name, turnstileToken);
           get().setToken(token);
           set({ user, isAuthenticated: true, isLoading: false });
         } catch (error) {
@@ -191,12 +174,22 @@ export const useUserStore = create<UserStore>()(
       socialLogin: async (provider: 'kakao' | 'google' | 'apple') => {
         set({ isLoading: true });
         try {
-          const { user, token } = await mockSocialLogin(provider);
+          // Use test social login for development
+          const response = await apiCall('/auth/test-social-login', {
+            method: 'POST',
+            body: JSON.stringify({ provider }),
+          });
+          
+          if (!response.success) {
+            throw new Error(response.message || 'Social login failed');
+          }
+          
+          const { user, token } = response.data;
           get().setToken(token);
           set({ user, isAuthenticated: true, isLoading: false });
           
-          // Redirect to home page
-          window.location.href = '/';
+          // Show success message
+          console.log(`${provider} 로그인 성공:`, user.name);
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -206,7 +199,7 @@ export const useUserStore = create<UserStore>()(
       logout: async () => {
         set({ isLoading: true });
         try {
-          await mockLogout();
+          await realLogout();
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
@@ -225,7 +218,7 @@ export const useUserStore = create<UserStore>()(
         if (!token) return;
 
         try {
-          const user = await mockFetchUser();
+          const user = await realFetchUser();
           set({ user, isAuthenticated: true });
         } catch (error) {
           console.error('Failed to refresh user:', error);
@@ -240,7 +233,7 @@ export const useUserStore = create<UserStore>()(
 
         set({ isLoading: true });
         try {
-          const updatedUser = await mockUpdateProfile(data);
+          const updatedUser = await realUpdateProfile(data);
           set({ 
             user: updatedUser, 
             isLoading: false 
@@ -258,6 +251,34 @@ export const useUserStore = create<UserStore>()(
 
         const updatedSettings = { ...currentUser.settings, ...settings };
         await get().updateProfile({ settings: updatedSettings });
+      },
+
+      // Initialize authentication state
+      initialize: async () => {
+        const token = tokenManager.get();
+        if (!token) {
+          set({ isAuthenticated: false, user: null });
+          return;
+        }
+
+        try {
+          const user = await realFetchUser();
+          set({ 
+            user, 
+            isAuthenticated: true, 
+            token,
+            isLoading: false 
+          });
+        } catch (error) {
+          console.error('Failed to initialize user:', error);
+          // Token is invalid, clear it
+          get().setToken(null);
+          set({ 
+            user: null, 
+            isAuthenticated: false, 
+            isLoading: false 
+          });
+        }
       },
     }),
     {
