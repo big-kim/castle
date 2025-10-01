@@ -2,10 +2,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
+import { ForgotPassword } from './pages/ForgotPassword';
+import AuthSuccess from './pages/AuthSuccess';
 import { Home } from './pages/Home';
 import { P2P } from './pages/P2P';
 import Mining from './pages/Mining';
-
+import { TransactionHistory } from './pages/TransactionHistory';
 import { Finance } from './pages/Finance';
 import { Gift } from './pages/Gift';
 import { MyPage } from './pages/MyPage';
@@ -34,6 +37,9 @@ export default function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/success" element={<AuthSuccess />} />
           
           {/* Protected Routes */}
           <Route path="/" element={
@@ -41,7 +47,9 @@ export default function App() {
               <Layout />
             </ProtectedRoute>
           }>
-            <Route index element={<Home />} />
+            <Route index element={<Navigate to="/wallet" replace />} />
+            <Route path="wallet" element={<Home />} />
+            <Route path="wallet/transactions" element={<TransactionHistory />} />
             <Route path="p2p" element={<P2P />} />
             <Route path="mining" element={<Mining />} />
             <Route path="finance" element={<Finance />} />

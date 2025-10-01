@@ -1,33 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Clock, Gift, DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Plus, Coins, HandCoins, CreditCard } from 'lucide-react';
-import { useAssetStore } from '../stores/assetStore';
-import { formatCurrency, formatTokenAmount, cn } from '../lib/utils';
-import { StakingProduct, LendProduct, LoanProduct, WithdrawalHistory } from '../types';
+import { useAssetStore } from '@/stores/assetStore';
+import { formatCurrency, formatTokenAmount, cn } from '@/lib/utils';
+import { StakingProduct, LendProduct, LoanProduct, WithdrawalHistory } from '@/types';
+import { TabButton, LoadingSpinner, EmptyState } from '@/components/common';
 
 type TabType = 'staking' | 'lend' | 'loan';
-
-interface TabButtonProps {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}
-
-const TabButton: React.FC<TabButtonProps> = ({ active, onClick, children }) => {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex-1 py-3 px-4 text-sm font-medium rounded-xl transition-all duration-200',
-        active
-          ? 'bg-primary text-white shadow-md'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-      )}
-    >
-      {children}
-    </button>
-  );
-};
 
 interface StakingCardProps {
   product: StakingProduct;
@@ -47,7 +26,7 @@ interface LoanCardProps {
 const StakingCard: React.FC<StakingCardProps> = ({ product, onStake }) => {
   const getProductIcon = (type: string) => {
     switch (type) {
-      case 'gift_card':
+      case 'giftCard':
         return '🎁';
       default:
         return '🎁';
@@ -56,7 +35,7 @@ const StakingCard: React.FC<StakingCardProps> = ({ product, onStake }) => {
 
   const getProductName = (type: string) => {
     switch (type) {
-      case 'gift_card':
+      case 'giftCard':
         return 'IC 상품권 NFT 스테이킹';
       default:
         return 'IC 상품권 NFT 스테이킹';
@@ -76,9 +55,9 @@ const StakingCard: React.FC<StakingCardProps> = ({ product, onStake }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="text-3xl">{getProductIcon(product.product_type)}</div>
+          <div className="text-3xl">{getProductIcon(product.productType)}</div>
           <div>
-            <h3 className="font-semibold text-gray-900">{getProductName(product.product_type)}</h3>
+            <h3 className="font-semibold text-gray-900">{getProductName(product.productType)}</h3>
             <p className="text-sm text-gray-500">{product.duration} days</p>
           </div>
         </div>
@@ -102,13 +81,13 @@ const StakingCard: React.FC<StakingCardProps> = ({ product, onStake }) => {
           <div>
             <p className="text-sm text-gray-500">최소 금액</p>
             <p className="font-semibold text-gray-900">
-              {formatCurrency(product.min_amount)}
+              {formatCurrency(product.minAmount)}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">최대 금액</p>
             <p className="font-semibold text-gray-900">
-              {formatCurrency(product.max_amount)}
+              {formatCurrency(product.maxAmount)}
             </p>
           </div>
         </div>
@@ -116,25 +95,25 @@ const StakingCard: React.FC<StakingCardProps> = ({ product, onStake }) => {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">사용 가능한 슬롯</span>
-            <span className="font-medium">{product.available_slots}</span>
+            <span className="font-medium">{product.availableSlots}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">총 스테이킹</span>
-            <span className="font-medium">{formatCurrency(product.total_staked)}</span>
+            <span className="font-medium">{formatCurrency(product.totalStaked)}</span>
           </div>
         </div>
         
         <button
           onClick={() => onStake(product.id)}
-          disabled={product.available_slots === 0}
+          disabled={product.availableSlots === 0}
           className={cn(
             'w-full py-3 font-medium rounded-xl transition-colors',
-            product.available_slots > 0
+            product.availableSlots > 0
               ? 'bg-primary text-white hover:bg-primary/90'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           )}
         >
-          {product.available_slots > 0 ? '지금 스테이킹' : '매진'}
+          {product.availableSlots > 0 ? '지금 스테이킹' : '매진'}
         </button>
       </div>
     </div>
@@ -158,7 +137,7 @@ const LendCard: React.FC<LendCardProps> = ({ product, onLend }) => {
           <div className="text-3xl">🎁</div>
           <div>
             <h3 className="font-semibold text-gray-900">{product.name}</h3>
-            <p className="text-sm text-gray-500">{product.duration_days} days</p>
+            <p className="text-sm text-gray-500">{product.durationDays} days</p>
           </div>
         </div>
         
@@ -181,13 +160,13 @@ const LendCard: React.FC<LendCardProps> = ({ product, onLend }) => {
           <div>
             <p className="text-sm text-gray-500">최소 금액</p>
             <p className="font-semibold text-gray-900">
-              {formatCurrency(product.min_amount)}
+              {formatCurrency(product.minAmount)}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">담보 비율</p>
             <p className="font-semibold text-gray-900">
-              {product.collateral_ratio}%
+              {product.collateralRatio}%
             </p>
           </div>
         </div>
@@ -195,25 +174,25 @@ const LendCard: React.FC<LendCardProps> = ({ product, onLend }) => {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">사용 가능한 슬롯</span>
-            <span className="font-medium">{product.available_slots}</span>
+            <span className="font-medium">{product.availableSlots}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">총 대여금</span>
-            <span className="font-medium">{formatCurrency(product.total_lent || 0)}</span>
+            <span className="font-medium">{formatCurrency(product.totalLent || 0)}</span>
           </div>
         </div>
         
         <button
           onClick={() => onLend(product.id)}
-          disabled={!product.available || product.available_slots === 0}
+          disabled={!product.available || product.availableSlots === 0}
           className={cn(
             'w-full py-3 font-medium rounded-xl transition-colors',
-            product.available && (product.available_slots || 0) > 0
+            product.available && (product.availableSlots || 0) > 0
               ? 'bg-green-600 text-white hover:bg-green-700'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           )}
         >
-          {product.available && (product.available_slots || 0) > 0 ? 'NFT 대여하기' : '매진'}
+          {product.available && (product.availableSlots || 0) > 0 ? 'NFT 대여하기' : '매진'}
         </button>
       </div>
     </div>
@@ -227,7 +206,7 @@ const LoanCard: React.FC<LoanCardProps> = ({ product, onLoan }) => {
     return { level: '저위험', color: 'text-green-600 bg-green-50' };
   };
 
-  const risk = getRiskLevel(product.interest_rate);
+  const risk = getRiskLevel(product.interestRate);
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -237,7 +216,7 @@ const LoanCard: React.FC<LoanCardProps> = ({ product, onLoan }) => {
           <div className="text-3xl">💳</div>
           <div>
             <h3 className="font-semibold text-gray-900">{product.name}</h3>
-            <p className="text-sm text-gray-500">{product.duration_days} days</p>
+            <p className="text-sm text-gray-500">{product.durationDays} days</p>
           </div>
         </div>
         
@@ -253,20 +232,20 @@ const LoanCard: React.FC<LoanCardProps> = ({ product, onLoan }) => {
       <div className="space-y-4">
         <div className="text-center py-4 bg-gradient-to-r from-blue-500/10 to-blue-400/5 rounded-xl">
           <p className="text-sm text-gray-500 mb-1">연간 이자율</p>
-          <p className="text-3xl font-bold text-blue-600">{product.interest_rate}%</p>
+          <p className="text-3xl font-bold text-blue-600">{product.interestRate}%</p>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">최소 금액</p>
             <p className="font-semibold text-gray-900">
-              {formatCurrency(product.min_amount)}
+              {formatCurrency(product.minAmount)}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">LTV 비율</p>
             <p className="font-semibold text-gray-900">
-              {product.loan_to_value_ratio}%
+              {product.loanToValueRatio}%
             </p>
           </div>
         </div>
@@ -274,25 +253,25 @@ const LoanCard: React.FC<LoanCardProps> = ({ product, onLoan }) => {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">담보 필요</span>
-            <span className="font-medium">{product.collateral_required ? '예' : '아니오'}</span>
+            <span className="font-medium">{product.collateralRequired ? '예' : '아니오'}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">총 대출금</span>
-            <span className="font-medium">{formatCurrency(product.total_loaned || 0)}</span>
+            <span className="font-medium">{formatCurrency(product.totalLoaned || 0)}</span>
           </div>
         </div>
         
         <button
           onClick={() => onLoan(product.id)}
-          disabled={!product.available || product.available_slots === 0}
+          disabled={!product.available || product.availableSlots === 0}
           className={cn(
             'w-full py-3 font-medium rounded-xl transition-colors',
-            product.available && (product.available_slots || 0) > 0
+            product.available && (product.availableSlots || 0) > 0
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           )}
         >
-          {product.available && (product.available_slots || 0) > 0 ? '대출 신청하기' : '한도 초과'}
+          {product.available && (product.availableSlots || 0) > 0 ? '대출 신청하기' : '한도 초과'}
         </button>
       </div>
     </div>
@@ -336,7 +315,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ item }) => {
         return <ArrowDownLeft className="w-4 h-4 text-green-600" />;
       case 'withdrawal':
         return <ArrowUpRight className="w-4 h-4 text-red-600" />;
-      case 'staking_reward':
+      case 'stakingReward':
         return <Gift className="w-4 h-4 text-primary" />;
       default:
         return <DollarSign className="w-4 h-4 text-gray-600" />;
@@ -349,7 +328,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ item }) => {
         return '입금';
       case 'withdrawal':
         return '출금';
-      case 'staking_reward':
+      case 'stakingReward':
         return '스테이킹 보상';
       default:
         return type;
@@ -361,12 +340,12 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ item }) => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-gray-50 rounded-lg">
-            {getTypeIcon(item.transaction_type)}
+            {getTypeIcon(item.transactionType)}
           </div>
           <div>
-            <h4 className="font-medium text-gray-900">{getTypeName(item.transaction_type)}</h4>
+            <h4 className="font-medium text-gray-900">{getTypeName(item.transactionType)}</h4>
             <p className="text-sm text-gray-500">
-              {new Date(item.created_at).toLocaleDateString()}
+              {new Date(item.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -464,48 +443,48 @@ export const Finance: React.FC = () => {
   const stakingProducts: StakingProduct[] = [
     {
       id: '2',
-      type: 'gift_card',
+      type: 'giftCard',
       name: 'IC 상품권 NFT 스테이킹 30일',
       description: '30일 IC 상품권 NFT 스테이킹으로 8.0% 수익률',
       apy: 8.0,
-      duration_days: 30,
-      min_amount: 50,
-      max_amount: 5000,
+      durationDays: 30,
+      minAmount: 50,
+      maxAmount: 5000,
       available: true,
-      product_type: 'gift_card',
+      productType: 'giftCard',
       duration: 30,
-      available_slots: 25,
-      total_staked: 75000,
+      availableSlots: 25,
+      totalStaked: 75000,
     },
     {
       id: '4',
-      type: 'gift_card',
+      type: 'giftCard',
       name: 'IC 상품권 NFT 스테이킹 60일',
       description: '60일 IC 상품권 NFT 스테이킹으로 12.0% 수익률',
       apy: 12.0,
-      duration_days: 60,
-      min_amount: 100,
-      max_amount: 10000,
+      durationDays: 60,
+      minAmount: 100,
+      maxAmount: 10000,
       available: true,
-      product_type: 'gift_card',
+      productType: 'giftCard',
       duration: 60,
-      available_slots: 15,
-      total_staked: 125000,
+      availableSlots: 15,
+      totalStaked: 125000,
     },
     {
       id: '5',
-      type: 'gift_card',
+      type: 'giftCard',
       name: 'IC 상품권 NFT 스테이킹 90일',
       description: '90일 IC 상품권 NFT 스테이킹으로 15.0% 수익률',
       apy: 15.0,
-      duration_days: 90,
-      min_amount: 200,
-      max_amount: 20000,
+      durationDays: 90,
+      minAmount: 200,
+      maxAmount: 20000,
       available: true,
-      product_type: 'gift_card',
+      productType: 'giftCard',
       duration: 90,
-      available_slots: 8,
-      total_staked: 180000,
+      availableSlots: 8,
+      totalStaked: 180000,
     },
   ];
 
@@ -515,43 +494,43 @@ export const Finance: React.FC = () => {
       id: 'lend1',
       name: 'IC 상품권 NFT 대여 30일',
       description: '30일 단기 NFT 대여로 높은 수익률을 제공합니다.',
-      nft_type: 'ic_gift_card',
+      nftType: 'icGiftCard',
       apy: 15.0,
-      duration_days: 30,
-      min_amount: 200,
-      max_amount: 20000,
+      durationDays: 30,
+      minAmount: 200,
+      maxAmount: 20000,
       available: true,
-      collateral_ratio: 120,
-      available_slots: 10,
-      total_lent: 35000
+      collateralRatio: 120,
+      availableSlots: 10,
+      totalLent: 35000
     },
     {
       id: 'lend2',
       name: 'IC 상품권 NFT 대여 60일',
       description: '60일 중기 NFT 대여로 안정적인 수익을 보장합니다.',
-      nft_type: 'ic_gift_card',
+      nftType: 'icGiftCard',
       apy: 22.0,
-      duration_days: 60,
-      min_amount: 500,
-      max_amount: 50000,
+      durationDays: 60,
+      minAmount: 500,
+      maxAmount: 50000,
       available: true,
-      collateral_ratio: 130,
-      available_slots: 8,
-      total_lent: 85000
+      collateralRatio: 130,
+      availableSlots: 8,
+      totalLent: 85000
     },
     {
       id: 'lend3',
       name: 'IC 상품권 NFT 대여 90일',
       description: '90일 장기 NFT 대여로 최고 수익률을 제공합니다.',
-      nft_type: 'ic_gift_card',
+      nftType: 'icGiftCard',
       apy: 28.0,
-      duration_days: 90,
-      min_amount: 1000,
-      max_amount: 100000,
+      durationDays: 90,
+      minAmount: 1000,
+      maxAmount: 100000,
       available: false,
-      collateral_ratio: 140,
-      available_slots: 0,
-      total_lent: 150000
+      collateralRatio: 140,
+      availableSlots: 0,
+      totalLent: 150000
     }
   ];
 
@@ -561,43 +540,43 @@ export const Finance: React.FC = () => {
       id: 'loan1',
       name: '단기 대출 30일',
       description: '30일 단기 대출 상품으로 빠른 자금 조달이 가능합니다.',
-      interest_rate: 12.0,
-      duration_days: 30,
-      min_amount: 100,
-      max_amount: 5000,
+      interestRate: 12.0,
+      durationDays: 30,
+      minAmount: 100,
+      maxAmount: 5000,
       available: true,
-      collateral_required: false,
-      loan_to_value_ratio: 80,
-      available_slots: 20,
-      total_loaned: 25000
+      collateralRequired: false,
+      loanToValueRatio: 80,
+      availableSlots: 20,
+      totalLoaned: 25000
     },
     {
       id: 'loan2',
       name: '중기 대출 90일',
       description: '90일 중기 대출 상품으로 안정적인 자금 운용이 가능합니다.',
-      interest_rate: 18.0,
-      duration_days: 90,
-      min_amount: 500,
-      max_amount: 20000,
+      interestRate: 18.0,
+      durationDays: 90,
+      minAmount: 500,
+      maxAmount: 20000,
       available: true,
-      collateral_required: true,
-      loan_to_value_ratio: 70,
-      available_slots: 12,
-      total_loaned: 75000
+      collateralRequired: true,
+      loanToValueRatio: 70,
+      availableSlots: 12,
+      totalLoaned: 75000
     },
     {
       id: 'loan3',
       name: '장기 대출 180일',
       description: '180일 장기 대출 상품으로 대규모 자금 조달에 적합합니다.',
-      interest_rate: 25.0,
-      duration_days: 180,
-      min_amount: 1000,
-      max_amount: 50000,
+      interestRate: 25.0,
+      durationDays: 180,
+      minAmount: 1000,
+      maxAmount: 50000,
       available: true,
-      collateral_required: true,
-      loan_to_value_ratio: 60,
-      available_slots: 5,
-      total_loaned: 120000
+      collateralRequired: true,
+      loanToValueRatio: 60,
+      availableSlots: 5,
+      totalLoaned: 120000
     }
   ];
 
@@ -605,31 +584,39 @@ export const Finance: React.FC = () => {
   const transactionHistory: WithdrawalHistory[] = [
     {
       id: '1',
-      type: 'staking_reward',
+      transactionType: 'stakingReward',
       amount: 125.50,
       status: 'completed',
+      createdAt: '2024-01-15T10:30:00Z',
       date: '2024-01-15T10:30:00Z',
+      type: 'stakingReward',
     },
     {
       id: '2',
-      type: 'deposit',
+      transactionType: 'deposit',
       amount: 1000.00,
       status: 'completed',
+      createdAt: '2024-01-14T15:20:00Z',
       date: '2024-01-14T15:20:00Z',
+      type: 'deposit',
     },
     {
       id: '3',
-      type: 'withdrawal',
+      transactionType: 'withdrawal',
       amount: 500.00,
       status: 'pending',
+      createdAt: '2024-01-13T09:15:00Z',
       date: '2024-01-13T09:15:00Z',
+      type: 'withdrawal',
     },
     {
       id: '4',
-      type: 'staking_reward',
+      transactionType: 'stakingReward',
       amount: 87.25,
       status: 'completed',
+      createdAt: '2024-01-12T14:45:00Z',
       date: '2024-01-12T14:45:00Z',
+      type: 'stakingReward',
     },
   ];
 

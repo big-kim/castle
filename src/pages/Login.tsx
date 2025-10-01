@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useUserStore } from '../stores/userStore';
 import { cn } from '../lib/utils';
 import castleLogo from '../assets/images/castle_logo.svg';
+import { toast } from 'sonner';
 
 // Social platform icons as SVG components
 const KakaoIcon = () => (
@@ -26,24 +27,26 @@ const AppleIcon = () => (
   </svg>
 );
 
-export const Login: React.FC = () => {
-  const [isLoading, setIsLoading] = useState<string | null>(null);
+export function Login() {
   const navigate = useNavigate();
   const { socialLogin } = useUserStore();
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
+
+
 
   const handleSocialLogin = async (provider: 'kakao' | 'google' | 'apple') => {
-    setIsLoading(provider);
+    setSocialLoading(provider);
+    setError('');
     
     try {
-      // Use the socialLogin function from userStore
       await socialLogin(provider);
-      
-      // Navigate to home dashboard
-      navigate('/home');
     } catch (error) {
-      console.error('Social login failed:', error);
+      console.error('Social login error:', error);
+      setError(error instanceof Error ? error.message : 'Social login failed');
+      toast.error('Social login failed. Please try again.');
     } finally {
-      setIsLoading(null);
+      setSocialLoading(null);
     }
   };
 
@@ -70,20 +73,28 @@ export const Login: React.FC = () => {
             <p className="text-body text-text-secondary">i-Castle 멤버를 위한 Web3 라이프스타일 지갑</p>
           </div>
 
+
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            </div>
+          )}
+
           {/* Social Login Buttons */}
           <div className="space-y-4">
             {/* Kakao Login */}
             <button
               onClick={() => handleSocialLogin('kakao')}
-              disabled={isLoading !== null}
+              disabled={socialLoading === 'kakao'}
               className={cn(
-                'w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl font-medium text-body transition-all duration-200',
-                'bg-[#FEE500] text-[#3C1E1E] hover:bg-[#FDD835] focus:ring-2 focus:ring-[#FEE500] focus:ring-offset-2',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'min-h-touch shadow-sm'
+                "w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium transition-all duration-200",
+                "bg-[#FEE500] text-[#000000] hover:bg-[#FDD835] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FEE500]",
+                socialLoading === 'kakao' && "opacity-50 cursor-not-allowed"
               )}
             >
-              {isLoading === 'kakao' ? (
+              {socialLoading === 'kakao' ? (
                 <div className="w-5 h-5 border-2 border-[#3C1E1E] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <KakaoIcon />
@@ -94,15 +105,14 @@ export const Login: React.FC = () => {
             {/* Google Login */}
             <button
               onClick={() => handleSocialLogin('google')}
-              disabled={isLoading !== null}
+              disabled={socialLoading === 'google'}
               className={cn(
-                'w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl font-medium text-body transition-all duration-200',
-                'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'min-h-touch shadow-sm'
+                "w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium transition-all duration-200",
+                "bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                socialLoading === 'google' && "opacity-50 cursor-not-allowed"
               )}
             >
-              {isLoading === 'google' ? (
+              {socialLoading === 'google' ? (
                 <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <GoogleIcon />
@@ -113,15 +123,14 @@ export const Login: React.FC = () => {
             {/* Apple Login */}
             <button
               onClick={() => handleSocialLogin('apple')}
-              disabled={isLoading !== null}
+              disabled={socialLoading === 'apple'}
               className={cn(
-                'w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-xl font-medium text-body transition-all duration-200',
-                'bg-black text-white hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'min-h-touch shadow-sm'
+                "w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium transition-all duration-200",
+                "bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500",
+                socialLoading === 'apple' && "opacity-50 cursor-not-allowed"
               )}
             >
-              {isLoading === 'apple' ? (
+              {socialLoading === 'apple' ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <AppleIcon />
@@ -143,6 +152,23 @@ export const Login: React.FC = () => {
               </button>
               에 동의하는 것으로 간주됩니다.
             </p>
+          </div>
+
+          {/* Additional Links */}
+          <div className="mt-8 space-y-4 text-center">
+            <div>
+              <p className="text-gray-600">
+                계정이 없으신가요?{' '}
+                <Link to="/signup" className="text-primary font-medium hover:underline">
+                  회원가입
+                </Link>
+              </p>
+            </div>
+            <div>
+              <Link to="/forgot-password" className="text-gray-500 text-sm hover:underline">
+                비밀번호를 잊으셨나요?
+              </Link>
+            </div>
           </div>
         </div>
       </div>

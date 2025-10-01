@@ -10,8 +10,12 @@ import express, {
 import cors from 'cors'
 import path from 'path'
 import dotenv from 'dotenv'
+import session from 'express-session'
 import { fileURLToPath } from 'url'
+import passport from './passport.js'
+import { dbManager } from './database.js'
 import authRoutes from './routes/auth.js'
+import walletRoutes from './routes/wallet.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -20,16 +24,38 @@ const __dirname = path.dirname(__filename)
 // load env
 dotenv.config()
 
+// Initialize database
+dbManager.initialize().catch(console.error);
+
 const app: express.Application = express()
 
-app.use(cors())
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+
+// Session configuration for OAuth
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}))
+
+// Initialize Passport
+app.use(passport.initialize())
+app.use(passport.session())
 
 /**
  * API Routes
  */
 app.use('/api/auth', authRoutes)
+app.use('/api/wallet', walletRoutes)
 
 /**
  * health

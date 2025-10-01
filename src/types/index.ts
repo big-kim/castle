@@ -1,327 +1,243 @@
-// User and Authentication Types
+// ============================================================================
+// CORE TYPES
+// ============================================================================
+
+// Common Types
+export type TokenSymbol = 
+  | 'ICC' | 'ICS' | 'ICF' | 'ICG' 
+  | 'AITC' | 'AITCP' 
+  | 'USDT' | 'BTC' | 'ETH' | 'BNB' | 'ADA' | 'LTC' | 'DOGE' 
+  | 'BELLS' | 'PEP' | 'JKC' | 'LKY' | 'DINGO' | 'SHIC';
+
+export type MineableCoin = 'BTC' | 'ETH' | 'LTC' | 'BCH' | 'XRP' | 'ADA' | 'DOT' | 'LINK';
+
+export type GiftCardType = 
+  | 'starbucks' | 'cgv' | 'lotte' | 'shinsegae' | 'hyundai' 
+  | 'emart' | 'gmarket' | 'olive_young' | 'kyobo';
+
+export type NavigationTab = 'home' | 'p2p' | 'mining' | 'finance' | 'gift';
+
+export type Language = 'ko' | 'en';
+export type Currency = 'USDT';
+export type RiskLevel = 'low' | 'medium' | 'high';
+export type RecordStatus = 'active' | 'completed' | 'cancelled' | 'defaulted';
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+export interface UserSettings {
+  appLockEnabled: boolean;
+  notificationsEnabled: boolean;
+  biometricEnabled: boolean;
+  language: Language;
+  currency: Currency;
+}
+
 export interface User {
   id: string;
-  icastle_id: string;
+  icastleId: string;
   email: string;
   name: string;
-  profile_image?: string;
+  profileImage?: string;
   avatar?: string;
-  wallet_address?: string;
   walletAddress?: string;
   socialProvider?: string;
   settings: UserSettings;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface UserSettings {
-  app_lock_enabled: boolean;
-  notifications_enabled: boolean;
-  notifications: boolean;
-  biometric_enabled: boolean;
-  language: 'ko' | 'en';
-  currency: 'USDT';
+export interface LoginForm {
+  icastleToken: string;
+  deviceId: string;
 }
 
-// Asset Types
+// ============================================================================
+// ASSET MANAGEMENT
+// ============================================================================
+
 export interface Asset {
   id: string;
-  user_id: string;
-  token_symbol: TokenSymbol;
+  userId: string;
+  tokenSymbol: TokenSymbol;
   balance: number;
-  usdt_value: number;
-  updated_at: string;
+  usdtValue: number;
+  updatedAt: string;
 }
 
-export type TokenSymbol = 'ICC' | 'ICS' | 'ICF' | 'ICG' | 'AITC' | 'AITCP' | 'USDT' | 'BTC' | 'ETH' | 'BNB' | 'ADA' | 'LTC' | 'DOGE' | 'BELLS' | 'PEP' | 'JKC' | 'LKY' | 'DINGO' | 'SHIC';
+export interface AssetSummary {
+  totalValueUsdt: number;
+  tokens: Asset[];
+  giftCards: GiftCard[];
+}
 
-// P2P Product Types
+// ============================================================================
+// P2P TRADING
+// ============================================================================
+
 export type P2PProductType = 'token' | 'nft' | 'coupon' | 'other';
+export type TradeMethod = 'normal' | 'smart_contract';
+export type SmartContractStatus = 'listed' | 'pending' | 'completed' | 'canceled' | 'timeout';
+export type OrderType = 'buy' | 'sell';
+export type OrderStatus = 'active' | 'completed' | 'cancelled';
 
 export interface P2PProductDetails {
   name: string;
   description?: string;
-  image_url?: string;
-  nft_contract_address?: string;
-  nft_token_id?: string;
-  coupon_code?: string;
-  coupon_barcode?: string;
-  expiry_date?: string;
+  imageUrl?: string;
+  nftContractAddress?: string;
+  nftTokenId?: string;
+  couponCode?: string;
+  couponBarcode?: string;
+  expiryDate?: string;
   brand?: string;
   category?: string;
-  usage_location?: string;
+  usageLocation?: string;
   denomination?: number;
-  base_price?: number;
-  discount_rate?: number;
-  product_code?: string;
+  basePrice?: number;
+  discountRate?: number;
+  productCode?: string;
 }
-
-export interface AssetSummary {
-  total_value_usdt: number;
-  tokens: Asset[];
-  gift_cards: GiftCard[];
-}
-
-// P2P Trading Types
-export type TradeMethod = 'normal' | 'smart_contract';
-export type SmartContractStatus = 'listed' | 'pending' | 'completed' | 'canceled' | 'timeout';
 
 export interface P2POrder {
   id: string;
-  user_id: string;
-  user_name?: string;
-  user_rating?: number;
-  product_type: P2PProductType;
-  token_symbol: TokenSymbol; // 판매하는 상품의 토큰 (상품이 토큰인 경우)
-  payment_token_symbol: TokenSymbol; // 결제에 사용할 토큰
+  userId: string;
+  userName?: string;
+  userRating?: number;
+  productType: P2PProductType;
+  tokenSymbol: TokenSymbol;
+  paymentTokenSymbol: TokenSymbol;
   amount: number;
   price: number;
-  price_per_token: number;
-  total_value: number;
-  payment_method: string;
-  type: 'buy' | 'sell';
-  status: 'active' | 'completed' | 'cancelled';
-  trade_method: TradeMethod;
-  smart_contract_status?: SmartContractStatus;
-  contract_address?: string;
-  transaction_hash?: string;
-  escrow_timeout?: string;
-  product_details?: P2PProductDetails;
-  created_at: string;
-  updated_at: string;
+  pricePerToken: number;
+  totalValue: number;
+  paymentMethod: string;
+  type: OrderType;
+  status: OrderStatus;
+  tradeMethod: TradeMethod;
+  smartContractStatus?: SmartContractStatus;
+  contractAddress?: string;
+  transactionHash?: string;
+  escrowTimeout?: string;
+  productDetails?: P2PProductDetails;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface P2PTransaction {
   id: string;
-  order_id: string;
-  buyer_id: string;
-  seller_id: string;
+  orderId: string;
+  buyerId: string;
+  sellerId: string;
   amount: number;
   price: number;
   status: 'pending' | 'completed' | 'cancelled';
-  created_at: string;
-  completed_at?: string;
+  createdAt: string;
+  completedAt?: string;
 }
 
-// Mining Types
-export interface MiningRecord {
-  id: string;
-  user_id: string;
-  coin_symbol: MineableCoin;
-  hash_power: number;
-  daily_reward: number;
-  mining_date: string;
-  created_at: string;
+export interface P2POrderForm {
+  type: OrderType;
+  productType: P2PProductType;
+  tokenSymbol: TokenSymbol;
+  paymentTokenSymbol: TokenSymbol;
+  amount: number;
+  price: number;
+  pricePerToken: string | number;
+  paymentMethod: string;
+  tradeMethod: TradeMethod;
+  productDetails?: P2PProductDetails;
 }
+
+// ============================================================================
+// MINING
+// ============================================================================
 
 export interface MiningActivity {
   id: string;
-  user_id: string;
-  token_symbol: TokenSymbol;
-  hash_power_allocated: number;
-  hash_power_used: number;
-  daily_reward: number;
-  pending_rewards: number;
-  total_mined: number;
-  is_active: boolean;
-  started_at: string | null;
-  updated_at: string;
+  userId: string;
+  tokenSymbol: TokenSymbol;
+  hashPowerAllocated: number;
+  hashPowerUsed: number;
+  dailyReward: number;
+  pendingRewards: number;
+  totalMined: number;
+  isActive: boolean;
+  startedAt: string | null;
+  updatedAt: string;
 }
 
 export interface MiningData {
   id: string;
-  user_id: string;
-  token_symbol: TokenSymbol;
-  hash_power: number;
-  daily_reward: number;
-  total_mined: number;
-  is_active: boolean;
-  started_at: string | null;
-  updated_at: string;
+  userId: string;
+  tokenSymbol: TokenSymbol;
+  hashPower: number;
+  dailyReward: number;
+  totalMined: number;
+  isActive: boolean;
+  startedAt: string | null;
+  updatedAt: string;
 }
 
 export interface MiningReward {
   id: string;
-  user_id: string;
-  token_symbol: TokenSymbol;
+  userId: string;
+  tokenSymbol: TokenSymbol;
   amount: number;
-  hash_power_used: number;
-  reward_date: string;
-  created_at: string;
+  hashPowerUsed: number;
+  rewardDate: string;
+  createdAt: string;
+}
+
+export interface MiningRecord {
+  id: string;
+  userId: string;
+  coinSymbol: MineableCoin;
+  hashPower: number;
+  dailyReward: number;
+  miningDate: string;
+  createdAt: string;
 }
 
 export interface MiningSummary {
-  total_hash_power: number;
-  used_hash_power: number;
-  total_earnings: number;
-  daily_earnings: number;
-}
-
-export type MineableCoin = 'BTC' | 'ETH' | 'LTC' | 'BCH' | 'XRP' | 'ADA' | 'DOT' | 'LINK';
-
-export interface MiningStatus {
-  hash_power: number;
-  daily_rewards: MiningRecord[];
-  mineable_coins: MineableCoinInfo[];
+  totalHashPower: number;
+  usedHashPower: number;
+  totalEarnings: number;
+  dailyEarnings: number;
 }
 
 export interface MineableCoinInfo {
   symbol: MineableCoin;
   name: string;
   icon: string;
-  current_price_usdt: number;
-  daily_reward: number;
-  hash_power_allocated: number;
+  currentPriceUsdt: number;
+  dailyReward: number;
+  hashPowerAllocated: number;
 }
 
-// Withdrawal Types
+export interface MiningStatus {
+  hashPower: number;
+  dailyRewards: MiningRecord[];
+  mineableCoins: MineableCoinInfo[];
+}
+
 export interface WithdrawalRequest {
   id: string;
-  user_id: string;
-  coin_symbol: MineableCoin;
+  userId: string;
+  coinSymbol: MineableCoin;
   amount: number;
-  coinex_address: string;
+  coinexAddress: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  created_at: string;
-  processed_at?: string;
-  transaction_hash?: string;
+  createdAt: string;
+  processedAt?: string;
+  transactionHash?: string;
 }
 
-// Staking Types
-export interface StakingRecord {
-  id: string;
-  user_id: string;
-  type: 'usdt' | 'gift_card';
+export interface WithdrawalForm {
+  coinSymbol: MineableCoin;
   amount: number;
-  apy: number;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'completed' | 'cancelled';
-  rewards_earned: number;
-}
-
-export interface StakingProduct {
-  id: string;
-  type: 'usdt' | 'gift_card';
-  name: string;
-  description: string;
-  apy: number;
-  min_amount: number;
-  max_amount: number;
-  duration_days: number;
-  available: boolean;
-  risk_level?: 'low' | 'medium' | 'high';
-  available_slots?: number;
-  product_type?: string;
-  duration?: number;
-  total_staked?: number;
-}
-
-// LEND Types
-export interface LendProduct {
-  id: string;
-  name: string;
-  description: string;
-  apy: number;
-  min_amount: number;
-  max_amount: number;
-  duration_days: number;
-  available: boolean;
-  risk_level?: 'low' | 'medium' | 'high';
-  available_slots?: number;
-  total_lent?: number;
-  nft_type: 'ic_gift_card';
-  collateral_ratio: number;
-}
-
-export interface LendRecord {
-  id: string;
-  user_id: string;
-  product_id: string;
-  nft_token_id: string;
-  amount: number;
-  apy: number;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'completed' | 'cancelled';
-  rewards_earned: number;
-  collateral_value: number;
-}
-
-// LOAN Types
-export interface LoanProduct {
-  id: string;
-  name: string;
-  description: string;
-  interest_rate: number;
-  min_amount: number;
-  max_amount: number;
-  duration_days: number;
-  available: boolean;
-  risk_level?: 'low' | 'medium' | 'high';
-  available_slots?: number;
-  total_loaned?: number;
-  collateral_required: boolean;
-  collateral_ratio?: number;
-  loan_to_value_ratio: number;
-}
-
-export interface LoanRecord {
-  id: string;
-  user_id: string;
-  product_id: string;
-  amount: number;
-  interest_rate: number;
-  start_date: string;
-  end_date: string;
-  status: 'active' | 'completed' | 'defaulted' | 'cancelled';
-  total_interest: number;
-  paid_interest: number;
-  remaining_balance: number;
-  collateral_nft_id?: string;
-  collateral_value?: number;
-  next_payment_date: string;
-  monthly_payment: number;
-}
-
-// Gift Card Types
-export interface GiftCard {
-  id: string;
-  user_id: string;
-  card_type: GiftCardType;
-  face_value: number;
-  current_balance: number;
-  nft_token_id?: string;
-  created_at: string;
-  updated_at: string;
-  brand?: string;
-  product_name?: string;
-  status?: 'active' | 'used' | 'expired';
-  value?: number;
-  card_number?: string;
-  expires_at?: string;
-  pin?: string;
-}
-
-export type GiftCardType = 'starbucks' | 'cgv' | 'lotte' | 'shinsegae' | 'hyundai' | 'emart' | 'gmarket' | 'olive_young' | 'kyobo';
-
-export interface GiftCardProduct {
-  id: string;
-  card_type: GiftCardType;
-  name: string;
-  description: string;
-  face_values: number[];
-  discount_rate: number;
-  image_url: string;
-  is_available: boolean;
-  category: string;
-  stock: number;
-  price?: number;
-  original_price?: number;
-  rating?: number;
-  reviews?: number;
-  validity_days?: number;
-  brand?: string;
+  coinexAddress: string;
 }
 
 export interface WithdrawalHistory {
@@ -330,24 +246,155 @@ export interface WithdrawalHistory {
   date: string;
   status: string;
   type: string;
-  transaction_type?: string;
-  created_at?: string;
+  transactionType?: string;
+  createdAt?: string;
   fee?: number;
+}
+
+// ============================================================================
+// FINANCE (STAKING, LENDING, LOANS)
+// ============================================================================
+
+export interface BaseFinanceProduct {
+  id: string;
+  name: string;
+  description: string;
+  minAmount: number;
+  maxAmount: number;
+  durationDays: number;
+  available: boolean;
+  riskLevel?: RiskLevel;
+  availableSlots?: number;
+}
+
+export interface StakingProduct extends BaseFinanceProduct {
+  type: 'usdt' | 'giftCard';
+  apy: number;
+  productType?: string;
+  duration?: number;
+  totalStaked?: number;
+}
+
+export interface LendProduct extends BaseFinanceProduct {
+  apy: number;
+  totalLent?: number;
+  nftType: 'icGiftCard';
+  collateralRatio: number;
+}
+
+export interface LoanProduct extends BaseFinanceProduct {
+  interestRate: number;
+  totalLoaned?: number;
+  collateralRequired: boolean;
+  collateralRatio?: number;
+  loanToValueRatio: number;
+}
+
+export interface BaseFinanceRecord {
+  id: string;
+  userId: string;
+  productId: string;
+  amount: number;
+  startDate: string;
+  endDate: string;
+  status: RecordStatus;
+}
+
+export interface StakingRecord extends BaseFinanceRecord {
+  type: 'usdt' | 'giftCard';
+  apy: number;
+  rewardsEarned: number;
+}
+
+export interface LendRecord extends BaseFinanceRecord {
+  nftTokenId: string;
+  apy: number;
+  rewardsEarned: number;
+  collateralValue: number;
+}
+
+export interface LoanRecord extends BaseFinanceRecord {
+  interestRate: number;
+  totalInterest: number;
+  paidInterest: number;
+  remainingBalance: number;
+  collateralNftId?: string;
+  collateralValue?: number;
+  nextPaymentDate: string;
+  monthlyPayment: number;
+}
+
+export interface StakingForm {
+  productId: string;
+  amount: number;
+}
+
+// ============================================================================
+// GIFT CARDS
+// ============================================================================
+
+export interface GiftCard {
+  id: string;
+  userId: string;
+  cardType: GiftCardType;
+  faceValue: number;
+  currentBalance: number;
+  nftTokenId?: string;
+  createdAt: string;
+  updatedAt: string;
+  brand?: string;
+  productName?: string;
+  status?: 'active' | 'used' | 'expired';
+  value?: number;
+  cardNumber?: string;
+  expiresAt?: string;
+  pin?: string;
+}
+
+export interface GiftCardProduct {
+  id: string;
+  cardType: GiftCardType;
+  name: string;
+  description: string;
+  faceValues: number[];
+  discountRate: number;
+  imageUrl: string;
+  isAvailable: boolean;
+  category: string;
+  stock: number;
+  price?: number;
+  originalPrice?: number;
+  rating?: number;
+  reviews?: number;
+  validityDays?: number;
+  brand?: string;
+}
+
+export interface GiftCardPurchaseForm {
+  cardType: GiftCardType;
+  faceValue: number;
+  quantity: number;
 }
 
 export interface QRTransaction {
   id: string;
-  gift_card_id: string;
+  giftCardId: string;
   amount: number;
-  qr_code: string;
-  expires_at: string;
+  qrCode: string;
+  expiresAt: string;
   status: 'pending' | 'used' | 'expired';
-  used_at?: string;
-  merchant_info?: string;
+  usedAt?: string;
+  merchantInfo?: string;
 }
 
-// Navigation Types
-export type NavigationTab = 'home' | 'p2p' | 'mining' | 'finance' | 'gift';
+export interface QRPaymentForm {
+  giftCardId: string;
+  amount: number;
+}
+
+// ============================================================================
+// NAVIGATION
+// ============================================================================
 
 export interface NavigationItem {
   id: NavigationTab;
@@ -356,7 +403,10 @@ export interface NavigationItem {
   path: string;
 }
 
-// API Response Types
+// ============================================================================
+// API RESPONSES
+// ============================================================================
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -369,58 +419,25 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
-  has_more: boolean;
+  hasMore: boolean;
 }
 
-// Form Types
-export interface LoginForm {
-  icastle_token: string;
-  device_id: string;
-}
+// ============================================================================
+// STORE INTERFACES
+// ============================================================================
 
-export interface P2POrderForm {
-  type: 'sell' | 'buy';
-  product_type: P2PProductType;
-  token_symbol: TokenSymbol;
-  payment_token_symbol: TokenSymbol;
-  amount: number;
-  price: number;
-  price_per_token: string | number;
-  payment_method: string;
-  trade_method: TradeMethod;
-  product_details?: P2PProductDetails;
-}
-
-export interface WithdrawalForm {
-  coin_symbol: MineableCoin;
-  amount: number;
-  coinex_address: string;
-}
-
-export interface StakingForm {
-  product_id: string;
-  amount: number;
-}
-
-export interface GiftCardPurchaseForm {
-  card_type: GiftCardType;
-  face_value: number;
-  quantity: number;
-}
-
-export interface QRPaymentForm {
-  gift_card_id: string;
-  amount: number;
-}
-
-// Store State Types
 export interface UserStore {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  socialLogin: (provider: 'kakao' | 'google' | 'apple') => Promise<void>;
-  logout: () => void;
+  token: string | null;
+  setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
+  login: (email: string, password: string, turnstileToken: string) => Promise<void>;
+  register: (email: string, password: string, name: string, turnstileToken: string) => Promise<void>;
+  socialLogin: (provider: 'kakao' | 'google' | 'apple') => void;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
 }
@@ -440,7 +457,7 @@ export interface P2PStore {
   transactions: P2PTransaction[];
   isLoading: boolean;
   error: string | null;
-  fetchOrders: (type?: 'sell' | 'buy') => Promise<void>;
+  fetchOrders: (type?: OrderType) => Promise<void>;
   fetchMyOrders: () => Promise<void>;
   createOrder: (orderData: P2POrderForm) => Promise<P2POrder>;
   cancelOrder: (orderId: string) => Promise<void>;
@@ -462,6 +479,9 @@ export interface MiningStore {
   dailyRewardTotal: number;
   isLoading: boolean;
   isWithdrawing: boolean;
+  coinexAccounts: any[];
+  depositHistory: any[];
+  withdrawalHistory: any[];
   fetchActivities: () => Promise<void>;
   fetchSummary: () => Promise<void>;
   fetchMiningData: () => Promise<void>;
@@ -470,6 +490,12 @@ export interface MiningStore {
   stopMining: (coinId: string) => Promise<void>;
   claimReward: (coinId: string) => Promise<void>;
   withdraw: (tokenSymbol: string, amount: number, withdrawalAddress: string) => Promise<void>;
+  registerCoinEXAccount: (userId: string, email: string) => Promise<void>;
+  getCoinEXAccount: (userId: string) => any;
+  generateDepositHistory: (coinSymbol: string, hashRate: number, price: number) => any[];
+  withdrawToCoinEX: (coinSymbol: string, amount: number, email: string) => Promise<void>;
+  getWithdrawalHistory: () => Promise<any[]>;
+  getAvailableBalance: (coinSymbol: string) => number;
 }
 
 export interface FinanceStore {
@@ -491,4 +517,59 @@ export interface GiftStore {
   purchaseGiftCard: (form: GiftCardPurchaseForm) => Promise<GiftCard>;
   generateQRCode: (giftCardId: string) => Promise<string>;
   useGiftCard: (giftCardId: string, amount: number) => Promise<void>;
+}
+
+export interface WalletOverview {
+  totalBalance: number;
+  totalBalanceUsdt: number;
+  totalValue?: number;
+  bnbWallet?: {
+    address: string;
+    balance: number;
+    usdtValue: number;
+  };
+  pointWallets?: Array<{
+    symbol: TokenSymbol;
+    balance: number;
+    usdtValue: number;
+  }>;
+  nftWallet?: {
+    nfts: Array<{
+      id: string;
+      name: string;
+      imageUrl: string;
+      value: number;
+    }>;
+  };
+  tokens: Array<{
+    symbol: TokenSymbol;
+    balance: number;
+    usdtValue: number;
+    change24h: number;
+  }>;
+  recentTransactions: Array<{
+    id: string;
+    type: 'send' | 'receive' | 'mining' | 'staking';
+    amount: number;
+    tokenSymbol: TokenSymbol;
+    timestamp: string;
+    status: 'completed' | 'pending' | 'failed';
+  }>;
+}
+
+export interface WalletStore {
+  overview: WalletOverview | null;
+  isLoading: boolean;
+  qrData: string | null;
+  bnbTransactions: any[] | null;
+  pointTransactions: any[] | null;
+  nftTransactions: any[] | null;
+  fetchWalletOverview: () => Promise<void>;
+  generateQRCode: (walletType: string, amount?: number, memo?: string) => Promise<string>;
+  sendBNB: (toAddress: string, amount: number, memo?: string) => Promise<void>;
+  withdrawPoint: (coinSymbol: string, amount: number, toAddress: string) => Promise<void>;
+  sendNFT: (nftId: string, toAddress: string, memo?: string) => Promise<void>;
+  fetchBNBTransactions: () => Promise<any[]>;
+  fetchPointTransactions: () => Promise<any[]>;
+  fetchNFTTransactions: () => Promise<any[]>;
 }

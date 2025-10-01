@@ -1,132 +1,182 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User, UserStore, UserSettings } from '../types';
+import { createMockFetch, generateId } from '../utils/mockData';
 
-// Mock API functions - replace with actual API calls
-const mockLogin = async (email: string, password: string): Promise<User> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  if (email === 'demo@example.com' && password === 'password') {
-    return {
-      id: '1',
-      icastle_id: 'icastle_001',
-      name: 'John Doe',
-      email: 'john@example.com',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      walletAddress: '0x1234567890abcdef',
-      wallet_address: '0x1234567890abcdef',
-      settings: {
-        app_lock_enabled: false,
-        notifications_enabled: true,
-        notifications: true,
-        biometric_enabled: false,
-        language: 'ko',
-        currency: 'USDT'
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3004/api';
+const TOKEN_KEY = 'ic-wallet-token';
+
+// ============================================================================
+// MOCK DATA GENERATORS
+// ============================================================================
+
+const generateMockUser = (provider?: 'kakao' | 'google' | 'apple'): User => ({
+  id: generateId(),
+  icastleId: `ic_${generateId()}`,
+  email: provider ? `user@${provider}.com` : 'user@example.com',
+  name: provider ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} User` : 'Test User',
+  profileImage: null,
+  walletAddress: `0x${Math.random().toString(16).substr(2, 40)}`,
+  socialProvider: provider,
+  settings: {
+    appLockEnabled: false,
+    notificationsEnabled: true,
+    biometricEnabled: false,
+    language: 'ko',
+    currency: 'USDT'
+  },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
+});
+
+// ============================================================================
+// API UTILITY FUNCTIONS
+// ============================================================================
+
+const createApiCall = (baseUrl: string) => {
+  return async (endpoint: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
       },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-  }
-  
-  throw new Error('Invalid credentials');
-};
+      credentials: 'include',
+      ...options,
+    });
 
-const mockSocialLogin = async (provider: 'kakao' | 'google' | 'apple'): Promise<User> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Generate random wallet address
-  const generateWalletAddress = () => {
-    const chars = '0123456789abcdef';
-    let address = '0x';
-    for (let i = 0; i < 40; i++) {
-      address += chars[Math.floor(Math.random() * chars.length)];
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Network error' }));
+      throw new Error(error.message || 'API request failed');
     }
-    return address;
-  };
-  
-  const providerData = {
-    kakao: {
-      name: '카카오 사용자',
-      email: 'user@kakao.com',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face'
-    },
-    google: {
-      name: 'Google User',
-      email: 'user@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&h=150&fit=crop&crop=face'
-    },
-    apple: {
-      name: 'Apple User',
-      email: 'user@icloud.com',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-    }
-  };
-  
-  const userData = providerData[provider];
-  
-  const userId = Math.random().toString(36).substr(2, 9);
-  const walletAddress = generateWalletAddress();
-  
-  return {
-    id: userId,
-    icastle_id: `icastle_${userId}`,
-    name: userData.name,
-    email: userData.email,
-    avatar: userData.avatar,
-    walletAddress: walletAddress,
-    wallet_address: walletAddress,
-    socialProvider: provider,
-    settings: {
-      app_lock_enabled: false,
-      notifications_enabled: true,
-      notifications: true,
-      biometric_enabled: false,
-      language: 'ko',
-      currency: 'USDT'
-    },
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+
+    return response.json();
   };
 };
 
-const mockUpdateProfile = async (data: Partial<User>): Promise<User> => {
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Return updated user data
-  return {
-    id: '1',
-    icastle_id: 'user123',
-    email: data.email || 'user@example.com',
-    name: data.name || '김태열',
-    profile_image: data.profile_image || 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20korean%20businessman%20avatar%20portrait&image_size=square',
-    wallet_address: data.wallet_address || '0x1234567890123456789012345678901234567890',
-    settings: data.settings || {
-      app_lock_enabled: false,
-      notifications_enabled: true,
-      notifications: true,
-      biometric_enabled: false,
-      language: 'ko',
-      currency: 'USDT',
-    },
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+const apiCall = createApiCall(API_BASE_URL);
+
+// ============================================================================
+// MOCK API FUNCTIONS
+// ============================================================================
+
+const mockLogin = createMockFetch(
+  (email: string, password: string, turnstileToken: string) => {
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+    
+    const user = generateMockUser();
+    const token = `mock_token_${generateId()}`;
+    
+    return { user, token };
+  },
+  { delay: [800, 1500] }
+);
+
+const mockRegister = createMockFetch(
+  (email: string, password: string, name: string, turnstileToken: string) => {
+    if (!email || !password || !name) {
+      throw new Error('All fields are required');
+    }
+    
+    const user = { ...generateMockUser(), email, name };
+    const token = `mock_token_${generateId()}`;
+    
+    return { user, token };
+  },
+  { delay: [1000, 2000] }
+);
+
+const mockLogout = createMockFetch(
+  () => ({ success: true }),
+  { delay: [300, 600] }
+);
+
+const mockFetchUser = createMockFetch(
+  () => generateMockUser(),
+  { delay: [400, 800] }
+);
+
+const mockUpdateProfile = createMockFetch(
+  (updates: Partial<User>) => {
+    const user = generateMockUser();
+    return { ...user, ...updates, updatedAt: new Date().toISOString() };
+  },
+  { delay: [600, 1200] }
+);
+
+const mockSocialLogin = createMockFetch(
+  (provider: 'kakao' | 'google' | 'apple') => {
+    const user = generateMockUser(provider);
+    const token = `mock_${provider}_token_${generateId()}`;
+    
+    return { user, token };
+  },
+  { delay: [1000, 1500] }
+);
+
+// ============================================================================
+// TOKEN MANAGEMENT
+// ============================================================================
+
+const tokenManager = {
+  get: () => localStorage.getItem(TOKEN_KEY),
+  set: (token: string) => localStorage.setItem(TOKEN_KEY, token),
+  remove: () => localStorage.removeItem(TOKEN_KEY),
 };
+
+// ============================================================================
+// USER STORE
+// ============================================================================
 
 export const useUserStore = create<UserStore>()(
   persist(
     (set, get) => ({
+      // State
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      token: null,
 
-      login: async (email: string, password: string) => {
+      // Token management
+      setUser: (user: User | null) => {
+        set({ user, isAuthenticated: !!user });
+      },
+
+      setToken: (token: string | null) => {
+        set({ token });
+        if (token) {
+          tokenManager.set(token);
+        } else {
+          tokenManager.remove();
+        }
+      },
+
+      // Authentication actions
+      login: async (email: string, password: string, turnstileToken: string) => {
         set({ isLoading: true });
         try {
-          const user = await mockLogin(email, password);
+          const { user, token } = await mockLogin(email, password, turnstileToken);
+          get().setToken(token);
+          set({ user, isAuthenticated: true, isLoading: false });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      register: async (email: string, password: string, name: string, turnstileToken: string) => {
+        set({ isLoading: true });
+        try {
+          const { user, token } = await mockRegister(email, password, name, turnstileToken);
+          get().setToken(token);
           set({ user, isAuthenticated: true, isLoading: false });
         } catch (error) {
           set({ isLoading: false });
@@ -137,20 +187,47 @@ export const useUserStore = create<UserStore>()(
       socialLogin: async (provider: 'kakao' | 'google' | 'apple') => {
         set({ isLoading: true });
         try {
-          const user = await mockSocialLogin(provider);
+          const { user, token } = await mockSocialLogin(provider);
+          get().setToken(token);
           set({ user, isAuthenticated: true, isLoading: false });
+          
+          // Redirect to home page
+          window.location.href = '/';
         } catch (error) {
           set({ isLoading: false });
           throw error;
         }
       },
 
-      logout: () => {
-        set({ 
-          user: null, 
-          isAuthenticated: false, 
-          isLoading: false 
-        });
+      logout: async () => {
+        set({ isLoading: true });
+        try {
+          await mockLogout();
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          get().setToken(null);
+          set({ 
+            user: null, 
+            isAuthenticated: false, 
+            isLoading: false 
+          });
+        }
+      },
+
+      // User data management
+      refreshUser: async () => {
+        const token = tokenManager.get();
+        if (!token) return;
+
+        try {
+          const user = await mockFetchUser();
+          set({ user, isAuthenticated: true });
+        } catch (error) {
+          console.error('Failed to refresh user:', error);
+          get().setToken(null);
+          set({ user: null, isAuthenticated: false });
+        }
       },
 
       updateProfile: async (data: Partial<User>) => {
@@ -159,7 +236,7 @@ export const useUserStore = create<UserStore>()(
 
         set({ isLoading: true });
         try {
-          const updatedUser = await mockUpdateProfile({ ...currentUser, ...data });
+          const updatedUser = await mockUpdateProfile(data);
           set({ 
             user: updatedUser, 
             isLoading: false 
@@ -183,7 +260,8 @@ export const useUserStore = create<UserStore>()(
       name: 'ic-wallet-user',
       partialize: (state) => ({ 
         user: state.user, 
-        isAuthenticated: state.isAuthenticated 
+        isAuthenticated: state.isAuthenticated,
+        token: state.token
       }),
     }
   )

@@ -12,7 +12,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Determine if we should show the back button based on the current route
   const shouldShowBackButton = () => {
-    const mainRoutes = ['/', '/p2p', '/mining', '/finance', '/gift', '/mypage'];
+    const mainRoutes = ['/', '/wallet', '/p2p', '/mining', '/finance', '/gift', '/mypage'];
     return !mainRoutes.includes(location.pathname);
   };
 

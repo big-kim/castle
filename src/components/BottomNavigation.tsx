@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, Pickaxe, TrendingUp, Gift } from 'lucide-react';
+import { Wallet, Users, Pickaxe, TrendingUp, Gift } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -12,10 +12,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    id: 'home',
-    label: '홈',
-    icon: Home,
-    path: '/',
+    id: 'wallet',
+    label: '지갑',
+    icon: Wallet,
+    path: '/wallet',
   },
   {
     id: 'p2p',
@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
   },
   {
     id: 'gift',
-    label: '기프트',
+    label: '스토어',
     icon: Gift,
     path: '/gift',
   },
@@ -52,8 +52,8 @@ export const BottomNavigation: React.FC = () => {
   };
 
   const isActive = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
+    if (path === '/wallet') {
+      return location.pathname === '/' || location.pathname === '/wallet';
     }
     return location.pathname.startsWith(path);
   };

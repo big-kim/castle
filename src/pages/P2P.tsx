@@ -1,37 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, User, Shield, Star, Filter, Search, Gift, Ticket, Package, Coins, Plus, X } from 'lucide-react';
-import { useP2PStore } from '../stores/p2pStore';
-import { useUserStore } from '../stores/userStore';
-import { formatCurrency, formatTokenAmount, cn } from '../lib/utils';
-import { P2POrder, TokenSymbol, P2PProductType, P2POrderForm, TradeMethod } from '../types';
-import { web3Manager, formatAddress, formatTxHash, getBSCScanUrl } from '../utils/web3';
+import { useP2PStore } from '@/stores/p2pStore';
+import { useUserStore } from '@/stores/userStore';
+import { formatCurrency, formatTokenAmount, cn } from '@/lib/utils';
+import { P2POrder, TokenSymbol, P2PProductType, P2POrderForm, TradeMethod } from '@/types';
+import { web3Manager, formatAddress, formatTxHash, getBSCScanUrl } from '@/utils/web3';
 import { ExternalLink } from 'lucide-react';
+import { TabButton, StatusBadge } from '@/components/common';
 
 type TabType = 'sell' | 'buy' | 'my-trades';
 type ProductTabType = 'token' | 'nft' | 'coupon' | 'other';
-
-interface TabButtonProps {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}
-
-const TabButton: React.FC<TabButtonProps> = ({ active, onClick, children }) => {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex-1 py-3 px-4 text-sm font-medium rounded-xl transition-all duration-200',
-        active
-          ? 'bg-primary text-white shadow-md'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-      )}
-    >
-      {children}
-    </button>
-  );
-};
 
 interface OrderCardProps {
   order: P2POrder;
@@ -42,7 +21,7 @@ interface OrderCardProps {
 const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const isMyOrder = order.user_id === currentUserId;
+  const isMyOrder = order.userId === currentUserId;
   const isBuyOrder = order.type === 'buy';
   
   const getTokenIcon = (symbol: TokenSymbol) => {
@@ -180,9 +159,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
   return (
     <div 
       className={`bg-white rounded-2xl p-4 shadow-sm border-2 cursor-pointer hover:shadow-lg transition-all duration-200 ${
-        order.smart_contract_status === 'completed' ? 'border-green-200 bg-green-50/30' :
-        order.smart_contract_status === 'listed' ? 'border-blue-200 bg-blue-50/30' :
-        order.smart_contract_status === 'pending' ? 'border-yellow-200 bg-yellow-50/30' :
+        order.smartContractStatus === 'completed' ? 'border-green-200 bg-green-50/30' :
+              order.smartContractStatus === 'listed' ? 'border-blue-200 bg-blue-50/30' :
+              order.smartContractStatus === 'pending' ? 'border-yellow-200 bg-yellow-50/30' :
         'border-gray-100'
       }`}
       onClick={() => setIsExpanded(!isExpanded)}
@@ -192,30 +171,28 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             {/* Status Badge - Only 판매중 or 판매완료 */}
-            <span className={`px-3 py-2 rounded-full text-sm font-semibold shadow-sm ${
-              order.status === 'completed' || order.smart_contract_status === 'completed' ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' :
-              'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
-            }`}>
-              {order.status === 'completed' || order.smart_contract_status === 'completed' ? '판매완료' : '판매중'}
-            </span>
+            <StatusBadge 
+              status={order.status === 'completed' || order.smartContractStatus === 'completed' ? 'completed' : 'active'}
+              variant="gradient"
+            />
           </div>
           <div>
             <h3 className="font-bold text-gray-900">
-              {order.product_type === 'nft' 
-                ? `IC상품권 NFT 판매 / ${generateICGiftCode(order.total_value)}`
-                : order.product_type === 'coupon'
+              {order.productType === 'nft' 
+                ? `IC상품권 NFT 판매 / ${generateICGiftCode(order.totalValue)}`
+                : order.productType === 'coupon'
                 ? `쿠폰 판매 / ${generateCouponCode(order.id)}`
-                : `${order.token_symbol} ${isBuyOrder ? '구매' : '판매'} / ${generateProductCode(order.id)}`
+                : `${order.tokenSymbol} ${isBuyOrder ? '구매' : '판매'} / ${generateProductCode(order.id)}`
               }
             </h3>
             <div className="text-sm text-gray-600 flex items-center space-x-2">
               <span className="flex items-center space-x-1">
                 <span>📦</span>
                 <span>
-                  {order.product_type === 'coupon' 
+                  {order.productType === 'coupon' 
                     ? `${formatCurrency(order.amount)}`
-                    : order.product_type === 'token' 
-                    ? `${formatTokenAmount(order.amount, 2)} ${order.token_symbol}`
+                    : order.productType === 'token' 
+                    ? `${formatTokenAmount(order.amount, 2)} ${order.tokenSymbol}`
                     : `${order.amount}개`
                   }
                 </span>
@@ -224,9 +201,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
               <span className="flex items-center space-x-1">
                 <span>💰</span>
                 <span>
-                  {order.product_type === 'coupon' 
-                    ? `${formatCurrency(order.price_per_token)} (할인가)`
-                    : `${formatCurrency(order.price_per_token)}`
+                  {order.productType === 'coupon' 
+                    ? `${formatCurrency(order.pricePerToken)} (할인가)`
+                    : `${formatCurrency(order.pricePerToken)}`
                   }
                 </span>
               </span>
@@ -248,32 +225,32 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-sm text-gray-500">
-                {order.product_type === 'coupon' ? '쿠폰 금액' : '수량'}
+                {order.productType === 'coupon' ? '쿠폰 금액' : '수량'}
               </p>
               <p className="font-semibold text-gray-900">
-                {order.product_type === 'coupon' 
+                {order.productType === 'coupon' 
                   ? `${formatCurrency(order.amount)}`
-                  : order.product_type === 'token' 
-                  ? `${formatTokenAmount(order.amount, 2)} ${order.token_symbol}`
+                  : order.productType === 'token' 
+                  ? `${formatTokenAmount(order.amount, 2)} ${order.tokenSymbol}`
                   : `${order.amount}개`
                 }
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">
-                {order.product_type === 'coupon' ? '할인가' : '가격'}
+                {order.productType === 'coupon' ? '할인가' : '가격'}
               </p>
               <p className="font-semibold text-gray-900">
-                {order.product_type === 'coupon' 
-                  ? `${formatCurrency(order.price_per_token)}`
-                  : `${formatCurrency(order.price_per_token)}`
+                {order.productType === 'coupon' 
+                  ? `${formatCurrency(order.pricePerToken)}`
+                  : `${formatCurrency(order.pricePerToken)}`
                 }
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-500">총액</p>
               <p className="font-semibold text-primary">
-                {formatCurrency(order.total_value)}
+                {formatCurrency(order.totalValue)}
               </p>
             </div>
             <div>
@@ -285,49 +262,49 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
           </div>
 
           {/* Product Details */}
-          {order.product_details && (
+          {order.productDetails && (
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-500 mb-1">상품 정보</p>
               <div className="text-sm text-gray-700 space-y-1">
-                {order.product_type === 'nft' ? (
+                {order.productType === 'nft' ? (
                   <>
-                    <p><strong>상품명:</strong> IC 상품권 NFT {getICGiftDenomination(order.total_value)}</p>
-                    <p><strong>설명:</strong> IC 상품권 NFT - {getICGiftDenomination(order.total_value)} 디지털 상품권</p>
+                    <p><strong>상품명:</strong> IC 상품권 NFT {getICGiftDenomination(order.totalValue)}</p>
+                    <p><strong>설명:</strong> IC 상품권 NFT - {getICGiftDenomination(order.totalValue)} 디지털 상품권</p>
                     <p><strong>브랜드:</strong> IC Castle</p>
-                    <p><strong>카테고리:</strong> gift_card</p>
-                    {order.product_details.nft_token_id && (
-                      <p><strong>NFT ID:</strong> {order.product_details.nft_token_id}</p>
+                    <p><strong>카테고리:</strong> giftCard</p>
+                    {order.productDetails.nftTokenId && (
+                      <p><strong>NFT ID:</strong> {order.productDetails.nftTokenId}</p>
                     )}
                   </>
-                ) : order.product_type === 'coupon' ? (
+                ) : order.productType === 'coupon' ? (
                   <>
-                    <p><strong>상품명:</strong> {order.product_details.name || `디지털 쿠폰 ${getCouponDiscount(order.total_value)}`}</p>
-                    <p><strong>브랜드:</strong> {order.product_details.brand || 'IC Castle'}</p>
+                    <p><strong>상품명:</strong> {order.productDetails.name || `디지털 쿠폰 ${getCouponDiscount(order.totalValue)}`}</p>
+                    <p><strong>브랜드:</strong> {order.productDetails.brand || 'IC Castle'}</p>
                     <p><strong>카테고리:</strong> digital_coupon</p>
-                    <p><strong>할인율:</strong> {getCouponDiscount(order.total_value)}</p>
-                    <p><strong>유효기간:</strong> {order.product_details.expiry_date || '발급일로부터 1년'}</p>
-                    <p><strong>사용처:</strong> {order.product_details.usage_location || 'IC Castle 플랫폼 내 모든 상품'}</p>
-                    {order.product_details.coupon_code && (
-                      <p><strong>쿠폰코드:</strong> {order.product_details.coupon_code}</p>
+                    <p><strong>할인율:</strong> {getCouponDiscount(order.totalValue)}</p>
+                    <p><strong>유효기간:</strong> {order.productDetails.expiryDate || '발급일로부터 1년'}</p>
+                    <p><strong>사용처:</strong> {order.productDetails.usageLocation || 'IC Castle 플랫폼 내 모든 상품'}</p>
+                    {order.productDetails.couponCode && (
+                      <p><strong>쿠폰코드:</strong> {order.productDetails.couponCode}</p>
                     )}
                   </>
                 ) : (
                   <>
-                    <p><strong>상품명:</strong> {order.product_details.name}</p>
-                    {order.product_details.brand && (
-                      <p><strong>브랜드:</strong> {order.product_details.brand}</p>
+                    <p><strong>상품명:</strong> {order.productDetails.name}</p>
+                    {order.productDetails.brand && (
+                      <p><strong>브랜드:</strong> {order.productDetails.brand}</p>
                     )}
-                    {order.product_details.category && (
-                      <p><strong>카테고리:</strong> {order.product_details.category}</p>
+                    {order.productDetails.category && (
+                      <p><strong>카테고리:</strong> {order.productDetails.category}</p>
                     )}
-                    {order.product_details.coupon_code && (
-                      <p><strong>쿠폰코드:</strong> {order.product_details.coupon_code}</p>
+                    {order.productDetails.couponCode && (
+                      <p><strong>쿠폰코드:</strong> {order.productDetails.couponCode}</p>
                     )}
-                    {order.product_details.expiry_date && (
-                      <p><strong>만료일:</strong> {order.product_details.expiry_date}</p>
+                    {order.productDetails.expiryDate && (
+                      <p><strong>만료일:</strong> {order.productDetails.expiryDate}</p>
                     )}
-                    {order.product_details.nft_token_id && (
-                      <p><strong>NFT ID:</strong> {order.product_details.nft_token_id}</p>
+                    {order.productDetails.nftTokenId && (
+                      <p><strong>NFT ID:</strong> {order.productDetails.nftTokenId}</p>
                     )}
                   </>
                 )}
@@ -336,7 +313,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
           )}
 
           {/* Smart Contract Status Indicator */}
-          {order.smart_contract_status === 'listed' && (
+          {order.smartContractStatus === 'listed' && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <div className="text-sm text-blue-700 flex items-center space-x-2">
                 <span>🔒</span>
@@ -345,7 +322,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
             </div>
           )}
 
-          {order.smart_contract_status === 'completed' && (
+          {order.smartContractStatus === 'completed' && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
               <div className="text-sm text-green-700 flex items-center space-x-2">
                 <span>🎉</span>
@@ -354,7 +331,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
             </div>
           )}
 
-          {order.smart_contract_status === 'pending' && (
+          {order.smartContractStatus === 'pending' && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
               <div className="text-sm text-yellow-700 flex items-center space-x-2">
                 <span>⏳</span>
@@ -367,7 +344,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1 text-sm text-gray-500">
               <Clock className="w-4 h-4" />
-              <span>{new Date(order.created_at).toLocaleDateString()}</span>
+              <span>{new Date(order.createdAt).toLocaleDateString()}</span>
             </div>
             
             {order.status === 'active' && (
@@ -382,7 +359,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onAction, currentUserId })
           </div>
 
           {/* Enhanced Purchase Button - Always show for purchasable items */}
-          {!isMyOrder && order.status === 'active' && (order.smart_contract_status === 'listed' || !order.smart_contract_status) && (
+          {!isMyOrder && order.status === 'active' && (order.smartContractStatus === 'listed' || !order.smartContractStatus) && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <PurchaseButton order={order} />
             </div>
@@ -537,11 +514,11 @@ const SmartContractSellerActions = ({ order }: { order: P2POrder }) => {
 
   return (
     <div className="space-y-3">
-      <div className={`px-3 py-2 rounded-lg text-sm font-medium ${getStatusColor(order.smart_contract_status)}`}>
-        {getStatusText(order.smart_contract_status)}
+      <div className={`px-3 py-2 rounded-lg text-sm font-medium ${getStatusColor(order.smartContractStatus)}`}>
+                {getStatusText(order.smartContractStatus)}
       </div>
       
-      {order.smart_contract_status === 'listed' && (
+      {order.smartContractStatus === 'listed' && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border">
             💡 상품이 스마트 컨트랙트에 안전하게 보관되어 있습니다.
@@ -556,7 +533,7 @@ const SmartContractSellerActions = ({ order }: { order: P2POrder }) => {
         </div>
       )}
       
-      {order.smart_contract_status === 'completed' && (
+      {order.smartContractStatus === 'completed' && (
         <div className="text-xs text-green-600 bg-green-50 p-2 rounded border border-green-200">
           ✅ 거래가 완료되어 결제금이 지갑으로 전송되었습니다.
         </div>
@@ -587,8 +564,8 @@ const PurchaseButton = ({ order }: { order: P2POrder }) => {
     const confirmed = window.confirm(
       '💰 구매 확인\n\n' +
       `정말로 이 상품을 구매하시겠습니까?\n\n` +
-      `📦 상품: ${order.token_symbol || '상품'} ${order.amount}개\n` +
-      `💵 결제금액: ${formatCurrency(order.total_value)}\n\n` +
+      `📦 상품: ${order.tokenSymbol || '상품'} ${order.amount}개\n` +
+      `💵 결제금액: ${formatCurrency(order.totalValue)}\n\n` +
       '⚠️ 주의사항:\n' +
       '• 결제 즉시 상품이 지갑으로 전송됩니다\n' +
       '• 거래 완료 후 취소/환불이 불가능합니다\n' +
@@ -600,7 +577,7 @@ const PurchaseButton = ({ order }: { order: P2POrder }) => {
 
     setIsProcessing(true);
     try {
-      await depositAndExecute(order.id, order.total_value);
+      await depositAndExecute(order.id, order.totalValue);
       alert(
         '🎉 구매가 성공적으로 완료되었습니다!\n\n' +
         '✅ 결제금이 판매자에게 전송되었습니다\n' +
@@ -636,7 +613,7 @@ const PurchaseButton = ({ order }: { order: P2POrder }) => {
       ) : (
         <span className="flex items-center justify-center space-x-2">
           <span>🛒</span>
-          <span>즉시 구매 ({formatCurrency(order.total_value)})</span>
+          <span>즉시 구매 ({formatCurrency(order.totalValue)})</span>
         </span>
       )}
     </button>
@@ -654,8 +631,8 @@ const SmartContractBuyerActions = ({ order }: { order: P2POrder }) => {
     const confirmed = window.confirm(
       '💰 구매 확인\n\n' +
       `정말로 이 상품을 구매하시겠습니까?\n\n` +
-      `📦 상품: ${order.token_symbol || '상품'} ${order.amount}개\n` +
-      `💵 결제금액: ${formatCurrency(order.total_value)}\n\n` +
+      `📦 상품: ${order.tokenSymbol || '상품'} ${order.amount}개\n` +
+      `💵 결제금액: ${formatCurrency(order.totalValue)}\n\n` +
       '⚠️ 주의사항:\n' +
       '• 결제 즉시 상품이 지갑으로 전송됩니다\n' +
       '• 거래 완료 후 취소/환불이 불가능합니다\n' +
@@ -667,7 +644,7 @@ const SmartContractBuyerActions = ({ order }: { order: P2POrder }) => {
 
     setIsProcessing(true);
     try {
-      const hash = await depositAndExecute(order.id, order.total_value);
+      const hash = await depositAndExecute(order.id, order.totalValue);
       setTxHash(hash);
       alert(
         '🎉 구매가 성공적으로 완료되었습니다!\n\n' +
@@ -690,9 +667,9 @@ const SmartContractBuyerActions = ({ order }: { order: P2POrder }) => {
     }
   };
 
-  const canPurchase = order.smart_contract_status === 'listed';
-  const isCompleted = order.smart_contract_status === 'completed';
-  const isPending = order.smart_contract_status === 'pending';
+  const canPurchase = order.smartContractStatus === 'listed';
+    const isCompleted = order.smartContractStatus === 'completed';
+    const isPending = order.smartContractStatus === 'pending';
 
   return (
     <div className="space-y-3">
@@ -774,11 +751,11 @@ export const P2P: React.FC = () => {
     }
     
     // Filter by product type
-    filtered = filtered.filter(order => order.product_type === activeProductType);
+    filtered = filtered.filter(order => order.productType === activeProductType);
     
     // Filter by token (only for token type)
     if (activeProductType === 'token' && selectedToken !== 'all') {
-      filtered = filtered.filter(order => order.token_symbol === selectedToken);
+      filtered = filtered.filter(order => order.tokenSymbol === selectedToken);
     }
     
     // Filter by search query (search by order ID/trade code)
@@ -805,11 +782,11 @@ export const P2P: React.FC = () => {
     const [discountRate, setDiscountRate] = useState<number>(0);
     const [formData, setFormData] = useState<Partial<P2POrderForm>>({
       type: orderType,
-      product_type: productType,
-      payment_token_symbol: 'USDT',
+      productType: productType,
+      paymentTokenSymbol: 'USDT',
       amount: 0,
-      price_per_token: '',
-      trade_method: 'smart_contract',
+      pricePerToken: '',
+      tradeMethod: 'smart_contract',
     });
 
     // IC Gift Certificate denominations
@@ -858,13 +835,13 @@ export const P2P: React.FC = () => {
       setFormData({
         ...formData,
         amount: 1, // NFT는 항상 1개
-        price_per_token: finalPrice.toString(),
-        product_details: {
+        pricePerToken: finalPrice.toString(),
+        productDetails: {
           name: productName,
           denomination: denomination,
-          base_price: basePrice,
-          discount_rate: discount,
-          product_code: productCode
+          basePrice: basePrice,
+          discountRate: discount,
+          productCode: productCode
         }
       });
     };
@@ -872,7 +849,7 @@ export const P2P: React.FC = () => {
     // Handle denomination change
     const handleDenominationChange = (denomination: number) => {
       setSelectedDenomination(denomination);
-      if ((formData.product_type || productType) === 'nft') {
+      if ((formData.productType || productType) === 'nft') {
         updateNFTFormData(denomination, discountRate);
       }
     };
@@ -880,7 +857,7 @@ export const P2P: React.FC = () => {
     // Handle discount rate change
     const handleDiscountRateChange = (discount: number) => {
       setDiscountRate(discount);
-      if ((formData.product_type || productType) === 'nft') {
+      if ((formData.productType || productType) === 'nft') {
         updateNFTFormData(selectedDenomination, discount);
       }
     };
@@ -914,20 +891,20 @@ export const P2P: React.FC = () => {
       e.preventDefault();
       
       // NFT 타입일 때 최종 데이터 업데이트
-      if ((formData.product_type || productType) === 'nft') {
+      if ((formData.productType || productType) === 'nft') {
         const finalPrice = calculateFinalPrice(getBasePrice(selectedDenomination), discountRate);
         const productName = generateICGiftName(selectedDenomination);
         const productCode = generateICGiftCode(selectedDenomination);
         
         setFormData({
           ...formData,
-          price_per_token: finalPrice.toString(),
-          product_details: {
+          pricePerToken: finalPrice.toString(),
+          productDetails: {
             name: productName,
             denomination: selectedDenomination,
-            base_price: getBasePrice(selectedDenomination),
-            discount_rate: discountRate,
-            product_code: productCode
+            basePrice: getBasePrice(selectedDenomination),
+            discountRate: discountRate,
+            productCode: productCode
           }
         });
       }
@@ -939,7 +916,7 @@ export const P2P: React.FC = () => {
       try {
         const orderData = {
           ...formData,
-          price_per_token: parseFloat(String(formData.price_per_token || '0'))
+          pricePerToken: parseFloat(String(formData.pricePerToken || '0'))
         };
         await onCreateOrder(orderData);
         
@@ -950,11 +927,11 @@ export const P2P: React.FC = () => {
         setIsConfirmModalOpen(false);
         setFormData({
           type: orderType,
-          product_type: productType,
-          payment_token_symbol: 'USDT',
+          productType: productType,
+          paymentTokenSymbol: 'USDT',
           amount: 0,
-          price_per_token: '',
-          trade_method: 'smart_contract',
+          pricePerToken: '',
+          tradeMethod: 'smart_contract',
         });
       } catch (error) {
         console.error('주문 생성 실패:', error);
@@ -1012,8 +989,8 @@ export const P2P: React.FC = () => {
                       상품 타입
                     </label>
                     <select
-                      value={formData.product_type || productType}
-                      onChange={(e) => setFormData({ ...formData, product_type: e.target.value as P2PProductType })}
+                      value={formData.productType || productType}
+                      onChange={(e) => setFormData({ ...formData, productType: e.target.value as P2PProductType })}
                       className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
                     >
@@ -1041,14 +1018,14 @@ export const P2P: React.FC = () => {
                   </div>
 
                   {/* Token Selection (for token type) */}
-                  {(formData.product_type || productType) === 'token' && (
+                  {(formData.productType || productType) === 'token' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         거래할 코인
                       </label>
                       <select
-                        value={formData.token_symbol || ''}
-                        onChange={(e) => setFormData({ ...formData, token_symbol: e.target.value as TokenSymbol })}
+                        value={formData.tokenSymbol || ''}
+                        onChange={(e) => setFormData({ ...formData, tokenSymbol: e.target.value as TokenSymbol })}
                         className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                         required
                       >
@@ -1063,7 +1040,7 @@ export const P2P: React.FC = () => {
                   )}
 
                   {/* IC Gift Certificate Denomination Selection (for NFT type) */}
-                  {(formData.product_type || productType) === 'nft' && (
+                  {(formData.productType || productType) === 'nft' && (
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -1155,9 +1132,9 @@ export const P2P: React.FC = () => {
                   {/* Amount */}
                   <div>
                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                     {(formData.product_type || productType) === 'nft' ? 'IC상품권 수량' :
-                      (formData.product_type || productType) === 'coupon' ? '쿠폰 금액 (USDT)' : 
-                      (formData.product_type || productType) === 'token' ? `수량 (${formData.token_symbol || '코인'})` : 
+                     {(formData.productType || productType) === 'nft' ? 'IC상품권 수량' :
+                      (formData.productType || productType) === 'coupon' ? '쿠폰 금액 (USDT)' : 
+                      (formData.productType || productType) === 'token' ? `수량 (${formData.tokenSymbol || '코인'})` : 
                       '수량'}
                    </label>
                    <input
@@ -1165,17 +1142,17 @@ export const P2P: React.FC = () => {
                      value={formData.amount || ''}
                      onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
                      placeholder={
-                       (formData.product_type || productType) === 'nft' ? '판매할 IC상품권 수량을 입력하세요' :
-                       (formData.product_type || productType) === 'coupon' ? '쿠폰 금액을 USDT로 입력하세요' : 
-                       (formData.product_type || productType) === 'token' ? `${formData.token_symbol || '코인'} 수량을 입력하세요` : 
+                       (formData.productType || productType) === 'nft' ? '판매할 IC상품권 수량을 입력하세요' :
+                       (formData.productType || productType) === 'coupon' ? '쿠폰 금액을 USDT로 입력하세요' : 
+                       (formData.productType || productType) === 'token' ? `${formData.tokenSymbol || '코인'} 수량을 입력하세요` : 
                        '수량을 입력하세요'
                      }
                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                     min={(formData.product_type || productType) === 'nft' ? "1" : "0"}
-                     step={(formData.product_type || productType) === 'nft' ? "1" : "0.01"}
+                     min={(formData.productType || productType) === 'nft' ? "1" : "0"}
+                     step={(formData.productType || productType) === 'nft' ? "1" : "0.01"}
                      required
                    />
-                   {(formData.product_type || productType) === 'nft' && (
+                   {(formData.productType || productType) === 'nft' && (
                      <div className="mt-1 text-xs text-gray-500">
                        💡 IC상품권은 개별 단위로 판매됩니다 (최소 1개)
                      </div>
@@ -1188,12 +1165,12 @@ export const P2P: React.FC = () => {
                      결제 코인
                    </label>
                    <select
-                     value={formData.payment_token_symbol || 'USDT'}
-                     onChange={(e) => setFormData({ ...formData, payment_token_symbol: e.target.value as TokenSymbol })}
+                     value={formData.paymentTokenSymbol || 'USDT'}
+                     onChange={(e) => setFormData({ ...formData, paymentTokenSymbol: e.target.value as TokenSymbol })}
                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                      required
                    >
-                     {getPaymentTokens(formData.product_type || productType).map((token) => (
+                     {getPaymentTokens(formData.productType || productType).map((token) => (
                        <option key={token} value={token}>
                          {getTokenIcon(token)} {token}
                        </option>
@@ -1204,11 +1181,11 @@ export const P2P: React.FC = () => {
                  {/* Price */}
                  <div>
                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                     {(formData.product_type || productType) === 'nft' ? 'IC상품권 개당 가격 (USDT)' :
-                      (formData.product_type || productType) === 'coupon' ? '할인가 (USDT)' : 
-                      `개당 가격 (${formData.payment_token_symbol || 'USDT'})`}
+                     {(formData.productType || productType) === 'nft' ? 'IC상품권 개당 가격 (USDT)' :
+                      (formData.productType || productType) === 'coupon' ? '할인가 (USDT)' : 
+                      `개당 가격 (${formData.paymentTokenSymbol || 'USDT'})`}
                    </label>
-                   {(formData.product_type || productType) === 'nft' ? (
+                   {(formData.productType || productType) === 'nft' ? (
                      <div className="space-y-2">
                        <input
                          type="number"
@@ -1223,10 +1200,10 @@ export const P2P: React.FC = () => {
                    ) : (
                      <input
                        type="number"
-                       value={formData.price_per_token || ''}
-                       onChange={(e) => setFormData({ ...formData, price_per_token: e.target.value === '' ? '' : e.target.value })}
-                       placeholder={(formData.product_type || productType) === 'coupon' ? '할인된 가격을 USDT로 입력하세요' : 
-                                   `개당 가격을 ${formData.payment_token_symbol || 'USDT'}로 입력하세요 (예: 1.2345)`}
+                       value={formData.pricePerToken || ''}
+                       onChange={(e) => setFormData({ ...formData, pricePerToken: e.target.value === '' ? '' : e.target.value })}
+                       placeholder={(formData.productType || productType) === 'coupon' ? '할인된 가격을 USDT로 입력하세요' : 
+                                   `개당 가격을 ${formData.paymentTokenSymbol || 'USDT'}로 입력하세요 (예: 1.2345)`}
                        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                        min="0"
                        step="0.0001"
@@ -1241,10 +1218,10 @@ export const P2P: React.FC = () => {
                      <div className="flex justify-between items-center">
                        <span className="text-sm text-gray-600">총 금액:</span>
                        <span className="font-semibold text-primary">
-                         {(formData.product_type || productType) === 'nft' ? (
+                         {(formData.productType || productType) === 'nft' ? (
                            formatCurrency(formData.amount * calculateFinalPrice(getBasePrice(selectedDenomination), discountRate))
-                         ) : formData.price_per_token ? (
-                           formatCurrency(formData.amount * parseFloat(String(formData.price_per_token || '0')))
+                         ) : formData.pricePerToken ? (
+                           formatCurrency(formData.amount * parseFloat(String(formData.pricePerToken || '0')))
                          ) : (
                            '가격을 입력하세요'
                          )}
@@ -1299,7 +1276,7 @@ export const P2P: React.FC = () => {
                      {formData.type === 'sell' ? (
                        <>
                          <li>• <strong>{formData.type === 'sell' ? '판매 등록' : '구매 등록'} 즉시 상품이 에스크로 지갑으로 이동됩니다</strong></li>
-                         <li>• 충분한 {formData.token_symbol} {formData.amount}개를 보유하고 있어야 합니다</li>
+                         <li>• 충분한 {formData.tokenSymbol} {formData.amount}개를 보유하고 있어야 합니다</li>
                          <li>• 가스비가 추가로 발생합니다 (본인 부담)</li>
                          <li>• 거래는 블록체인에서 실행되며 되돌릴 수 없습니다</li>
                          <li>• 구매자가 나타나면 즉시 거래가 완료됩니다</li>
@@ -1308,7 +1285,7 @@ export const P2P: React.FC = () => {
                      ) : (
                        <>
                          <li>• <strong>구매 등록 즉시 결제금이 에스크로 지갑으로 이동됩니다</strong></li>
-                         <li>• 충분한 {formatCurrency((formData.amount || 0) * parseFloat(String(formData.price_per_token || '0')))}를 보유하고 있어야 합니다</li>
+                         <li>• 충분한 {formatCurrency((formData.amount || 0) * parseFloat(String(formData.pricePerToken || '0')))}를 보유하고 있어야 합니다</li>
                          <li>• 가스비가 추가로 발생합니다 (본인 부담)</li>
                          <li>• 거래는 블록체인에서 실행되며 되돌릴 수 없습니다</li>
                          <li>• 판매자가 나타나면 즉시 거래가 완료됩니다</li>
@@ -1348,9 +1325,9 @@ export const P2P: React.FC = () => {
                   <span>📦</span>
                   <span>상품 타입:</span>
                 </span>
-                <span className="font-semibold text-gray-900">{getProductTypeName(formData.product_type || 'token')}</span>
+                <span className="font-semibold text-gray-900">{getProductTypeName(formData.productType || 'token')}</span>
               </div>
-              {(formData.product_type || productType) === 'nft' ? (
+              {(formData.productType || productType) === 'nft' ? (
                 <>
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-gray-600 flex items-center space-x-1">
@@ -1405,18 +1382,18 @@ export const P2P: React.FC = () => {
                       <span>🪙</span>
                       <span>거래 코인:</span>
                     </span>
-                    <span className="font-semibold text-gray-900">{formData.token_symbol}</span>
+                    <span className="font-semibold text-gray-900">{formData.tokenSymbol}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-gray-600 flex items-center space-x-1">
                       <span>📊</span>
-                      <span>{(formData.product_type || productType) === 'coupon' ? '쿠폰 금액:' : '수량:'}</span>
+                      <span>{(formData.productType || productType) === 'coupon' ? '쿠폰 금액:' : '수량:'}</span>
                     </span>
                     <span className="font-semibold text-gray-900">
-                      {(formData.product_type || productType) === 'coupon' 
+                      {(formData.productType || productType) === 'coupon' 
                         ? `${formatCurrency(formData.amount || 0)}`
-                        : (formData.product_type || productType) === 'token'
-                        ? `${formData.amount} ${formData.token_symbol}`
+                        : (formData.productType || productType) === 'token'
+                        ? `${formData.amount} ${formData.tokenSymbol}`
                         : `${formData.amount}개`
                       }
                     </span>
@@ -1424,12 +1401,12 @@ export const P2P: React.FC = () => {
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-gray-600 flex items-center space-x-1">
                       <span>💰</span>
-                      <span>{(formData.product_type || productType) === 'coupon' ? '할인가:' : '개당 가격:'}</span>
+                      <span>{(formData.productType || productType) === 'coupon' ? '할인가:' : '개당 가격:'}</span>
                     </span>
                     <span className="font-semibold text-gray-900">
-                      {(formData.product_type || productType) === 'coupon' 
-                        ? `${formatCurrency(Number(formData.price_per_token) || 0)}`
-                        : `${formatCurrency(Number(formData.price_per_token) || 0)}`
+                      {(formData.productType || productType) === 'coupon' 
+                        ? `${formatCurrency(Number(formData.pricePerToken) || 0)}`
+                        : `${formatCurrency(Number(formData.pricePerToken) || 0)}`
                       }
                     </span>
                   </div>
@@ -1441,9 +1418,9 @@ export const P2P: React.FC = () => {
                   <span>총 결제금액:</span>
                 </span>
                 <span className="font-bold text-xl text-primary">
-                  {(formData.product_type || productType) === 'coupon' 
-                    ? `${formatCurrency((formData.amount || 0) * (Number(formData.price_per_token) || 0))}`
-                    : `${formatCurrency((formData.amount || 0) * (Number(formData.price_per_token) || 0))}`
+                  {(formData.productType || productType) === 'coupon' 
+                    ? `${formatCurrency((formData.amount || 0) * (Number(formData.pricePerToken) || 0))}`
+                    : `${formatCurrency((formData.amount || 0) * (Number(formData.pricePerToken) || 0))}`
                   }
                 </span>
               </div>
