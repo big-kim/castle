@@ -107,6 +107,7 @@ export const Signup: React.FC = () => {
             </div>
             
             <TurnstileWidget
+              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
               onVerify={handleTurnstileVerify}
               onError={handleTurnstileError}
               onExpire={handleTurnstileExpire}

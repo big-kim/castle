@@ -16,18 +16,22 @@ const TOKEN_KEY = 'ic-wallet-token';
 
 const generateMockUser = (provider?: 'kakao' | 'google' | 'apple'): User => ({
   id: generateId(),
-  icastleId: `ic_${generateId()}`,
   email: provider ? `user@${provider}.com` : 'user@example.com',
   name: provider ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} User` : 'Test User',
-  profileImage: null,
-  walletAddress: `0x${Math.random().toString(16).substr(2, 40)}`,
-  socialProvider: provider,
+  avatar: null,
   settings: {
-    appLockEnabled: false,
-    notificationsEnabled: true,
-    biometricEnabled: false,
     language: 'ko',
-    currency: 'USDT'
+    theme: 'light',
+    notifications: {
+      email: true,
+      push: true,
+      sms: false
+    },
+    privacy: {
+      profileVisibility: 'public',
+      showEmail: false,
+      showPhone: false
+    }
   },
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()

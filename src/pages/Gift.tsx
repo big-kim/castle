@@ -545,8 +545,8 @@ const GiftCardItem: React.FC<GiftCardProps> = ({ product, onPurchase }) => {
   };
 
   const getDiscountPercentage = () => {
-    if (product.originalPrice && product.originalPrice > product.price) {
-      return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+    if (product.original_price && product.original_price > product.price) {
+      return Math.round(((product.original_price - product.price) / product.original_price) * 100);
     }
     return 0;
   };
@@ -595,9 +595,9 @@ const GiftCardItem: React.FC<GiftCardProps> = ({ product, onPurchase }) => {
               <p className="text-2xl font-bold text-primary">
               {formatCurrency(product.price || 0)}
             </p>
-              {product.originalPrice && product.originalPrice > (product.price || 0) && (
+              {product.original_price && product.original_price > (product.price || 0) && (
                 <p className="text-sm text-gray-500 line-through">
-                  {formatCurrency(product.originalPrice)}
+                  {formatCurrency(product.original_price)}
                 </p>
               )}
             </div>
@@ -615,7 +615,7 @@ const GiftCardItem: React.FC<GiftCardProps> = ({ product, onPurchase }) => {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Validity</span>
-            <span className="font-medium">{product.validityDays} days</span>
+            <span className="font-medium">{product.validity_days} days</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Available</span>
@@ -727,7 +727,7 @@ const MyGiftCard: React.FC<MyGiftCardProps> = ({ giftCard, onGenerateQR, onUseCa
           <div className="flex items-center space-x-3">
             <div className="text-3xl">{getBrandIcon(giftCard.brand)}</div>
             <div>
-              <h3 className="font-bold text-lg">{giftCard.productName}</h3>
+              <h3 className="font-bold text-lg">{giftCard.product_name}</h3>
             </div>
           </div>
           
@@ -742,7 +742,7 @@ const MyGiftCard: React.FC<MyGiftCardProps> = ({ giftCard, onGenerateQR, onUseCa
         {/* Card Value */}
         <div className="relative z-10 mt-auto">
           <p className="text-sm opacity-90">Card Value</p>
-          <p className="text-2xl font-bold">{formatCurrency(giftCard.value || giftCard.faceValue || giftCard.currentBalance)}</p>
+          <p className="text-2xl font-bold">{formatCurrency(giftCard.value || giftCard.face_value || giftCard.current_balance)}</p>
         </div>
       </div>
       
@@ -751,12 +751,12 @@ const MyGiftCard: React.FC<MyGiftCardProps> = ({ giftCard, onGenerateQR, onUseCa
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-gray-500">Card Number</p>
-            <p className="font-mono font-medium">{giftCard.cardNumber}</p>
+            <p className="font-mono font-medium">{giftCard.card_number}</p>
           </div>
           <div>
             <p className="text-gray-500">Expires</p>
             <p className="font-medium">
-              {new Date(giftCard.expiresAt).toLocaleDateString()}
+              {new Date(giftCard.expires_at).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -958,110 +958,110 @@ export const Gift: React.FC = () => {
   const existingGiftCards: GiftCardProduct[] = [
     {
       id: 'starbucks-1',
-      cardType: 'starbucks',
+      card_type: 'starbucks',
       name: '스타벅스',
       description: '스타벅스 기프트카드',
-      faceValues: [10000, 30000, 50000],
-      discountRate: 0.1,
-      imageUrl: '/images/starbucks.png',
-      isAvailable: true,
+      face_values: [10000, 30000, 50000],
+      discount_rate: 0.1,
+      image_url: '/images/starbucks.png',
+      is_available: true,
       brand: 'starbucks',
       category: 'food',
       price: 10,
-      originalPrice: 12,
+      original_price: 12,
       rating: 4.8,
       reviews: 1250,
-      validityDays: 365,
+      validity_days: 365,
       stock: 50,
     },
     {
       id: 'cgv-1',
-      cardType: 'cgv',
+      card_type: 'cgv',
       name: 'CGV',
       description: 'CGV 영화관람권',
-      faceValues: [12000, 15000],
-      discountRate: 0.2,
-      imageUrl: '/images/cgv.png',
-      isAvailable: true,
+      face_values: [12000, 15000],
+      discount_rate: 0.2,
+      image_url: '/images/cgv.png',
+      is_available: true,
       brand: 'cgv',
       category: 'entertainment',
       price: 12,
-      originalPrice: 15,
+      original_price: 15,
       rating: 4.7,
       reviews: 890,
-      validityDays: 180,
+      validity_days: 180,
       stock: 30,
     },
     {
       id: 'lotte-1',
-      cardType: 'lotte',
+      card_type: 'lotte',
       name: '롯데리아',
       description: '롯데리아 기프트카드',
-      faceValues: [8000, 10000],
-      discountRate: 0.2,
-      imageUrl: '/images/lotte.png',
-      isAvailable: true,
+      face_values: [8000, 10000],
+      discount_rate: 0.2,
+      image_url: '/images/lotte.png',
+      is_available: true,
       brand: 'lotte',
       category: 'food',
       price: 8,
-      originalPrice: 10,
+      original_price: 10,
       rating: 4.5,
       reviews: 650,
-      validityDays: 365,
+      validity_days: 365,
       stock: 25,
     },
     {
       id: 'gmarket-1',
-      cardType: 'gmarket',
+      card_type: 'gmarket',
       name: 'G마켓',
       description: 'G마켓 상품권',
-      faceValues: [20000, 50000],
-      discountRate: 0.2,
-      imageUrl: '/images/gmarket.png',
-      isAvailable: true,
+      face_values: [20000, 50000],
+      discount_rate: 0.2,
+      image_url: '/images/gmarket.png',
+      is_available: true,
       brand: 'gmarket',
       category: 'shopping',
       price: 20,
-      originalPrice: 25,
+      original_price: 25,
       rating: 4.6,
       reviews: 1100,
-      validityDays: 365,
+      validity_days: 365,
       stock: 40,
     },
     {
       id: 'olive-1',
-      cardType: 'olive_young',
+      card_type: 'olive_young',
       name: '올리브영',
       description: '올리브영 기프트카드',
-      faceValues: [15000, 30000],
-      discountRate: 0.15,
-      imageUrl: '/images/olive_young.png',
-      isAvailable: true,
+      face_values: [15000, 30000],
+      discount_rate: 0.15,
+      image_url: '/images/olive_young.png',
+      is_available: true,
       brand: 'olive_young',
       category: 'beauty',
       price: 15,
-      originalPrice: 18,
+      original_price: 18,
       rating: 4.9,
       reviews: 780,
-      validityDays: 365,
+      validity_days: 365,
       stock: 35,
     },
     {
       id: 'kyobo-1',
-      cardType: 'kyobo',
+      card_type: 'kyobo',
       name: '교보문고',
       description: '교보문고 도서상품권',
-      faceValues: [10000, 20000],
-      discountRate: 0.15,
-      imageUrl: '/images/kyobo.png',
-      isAvailable: true,
+      face_values: [10000, 20000],
+      discount_rate: 0.15,
+      image_url: '/images/kyobo.png',
+      is_available: true,
       brand: 'kyobo',
       category: 'books',
       price: 10,
-      originalPrice: 12,
+      original_price: 12,
       rating: 4.7,
       reviews: 520,
-      validityDays: 365,
+      validity_days: 365,
       stock: 20,
     },
   ];

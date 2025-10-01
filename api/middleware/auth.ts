@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 
 interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     email: string;
   };
 }
@@ -195,7 +195,7 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
     const decoded = jwt.verify(token, jwtSecret) as any;
     
     // Verify user exists in database
-    const dbUser = await dbManager.findUserById(decoded.userId);
+    const dbUser = await dbManager.findUserById(decoded.id);
     if (!dbUser) {
       return res.status(401).json({
         success: false,
@@ -205,7 +205,7 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
 
     // Attach user info to request
     req.user = {
-      id: dbUser.id,
+      id: dbUser.id.toString(),
       email: dbUser.email
     };
 

@@ -1,29 +1,25 @@
 import { create } from 'zustand';
-import type { P2PStore, P2POrder, P2PProductType, TradeMethod, OrderType, P2PTransaction } from '../types';
+import type { P2PStore, P2POrder, P2PProductType, TradeMethod } from '../types';
 import { createMockFetch, generateRandomNumber, generateId } from '../utils/mockData';
 
 // ============================================================================
 // MOCK DATA GENERATORS
 // ============================================================================
 
-const generateMockP2POrder = (type: OrderType): P2POrder => ({
+const generateMockP2POrder = (type: P2PProductType): P2POrder => ({
   id: generateId(),
   userId: generateId(),
-  userName: 'User' + Math.floor(Math.random() * 1000),
-  userRating: generateRandomNumber(4.0, 5.0),
-  productType: 'token' as P2PProductType,
   type,
   tokenSymbol: ['ICC', 'ICS', 'ICG', 'USDT'][Math.floor(Math.random() * 4)] as any,
-  paymentTokenSymbol: 'USDT' as any,
   amount: generateRandomNumber(100, 10000),
   price: generateRandomNumber(0.5, 2.0),
-  pricePerToken: generateRandomNumber(0.5, 2.0),
   totalValue: 0, // Will be calculated
-  paymentMethod: ['Bank Transfer', 'PayPal', 'Cash'][Math.floor(Math.random() * 3)],
-  tradeMethod: 'normal' as TradeMethod,
+  tradeMethod: ['bank_transfer', 'paypal', 'cash'][Math.floor(Math.random() * 3)] as TradeMethod,
   status: Math.random() > 0.3 ? 'active' : 'completed',
   createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 3600000).toISOString(),
   updatedAt: new Date().toISOString(),
+  userRating: generateRandomNumber(4.0, 5.0),
+  completedTrades: generateRandomNumber(10, 500),
 });
 
 const generateMockP2POrders = (count: number = 20): P2POrder[] => {
@@ -39,11 +35,17 @@ const generateMockP2POrders = (count: number = 20): P2POrder[] => {
 // ============================================================================
 
 const mockFetchP2POrders = createMockFetch(
-  (type?: OrderType) => {
+  (filters?: { type?: P2PProductType; tokenSymbol?: string; tradeMethod?: TradeMethod }) => {
     let orders = generateMockP2POrders();
     
-    if (type) {
-      orders = orders.filter(order => order.type === type);
+    if (filters?.type) {
+      orders = orders.filter(order => order.type === filters.type);
+    }
+    if (filters?.tokenSymbol) {
+      orders = orders.filter(order => order.tokenSymbol === filters.tokenSymbol);
+    }
+    if (filters?.tradeMethod) {
+      orders = orders.filter(order => order.tradeMethod === filters.tradeMethod);
     }
     
     return orders;
@@ -78,36 +80,33 @@ export const useP2PStore = create<P2PStore>((set, get) => ({
   // State
   orders: [],
   myOrders: [],
-  transactions: [],
   isLoading: false,
-  error: null,
+  currentFilters: {
+    type: 'buy',
+    tokenSymbol: 'ICC',
+    tradeMethod: undefined,
+  },
 
   // Actions
-  fetchOrders: async (type) => {
-    set({ isLoading: true, error: null });
+  fetchOrders: async (filters) => {
+    set({ isLoading: true });
     try {
-      const orders = await mockFetchP2POrders(type);
+      const orders = await mockFetchP2POrders(filters);
       set({ 
         orders, 
+        currentFilters: { ...get().currentFilters, ...filters },
         isLoading: false 
       });
     } catch (error) {
       console.error('Failed to fetch P2P orders:', error);
-      set({ isLoading: false, error: 'Failed to fetch orders' });
+      set({ isLoading: false });
     }
   },
 
   createOrder: async (orderData) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true });
     try {
-      // Convert pricePerToken to number if it's a string
-      const processedOrderData = {
-        ...orderData,
-        pricePerToken: typeof orderData.pricePerToken === 'string' 
-          ? parseFloat(orderData.pricePerToken) 
-          : orderData.pricePerToken
-      };
-      const newOrder = await mockCreateP2POrder(processedOrderData);
+      const newOrder = await mockCreateP2POrder(orderData);
       const { orders, myOrders } = get();
       set({ 
         orders: [newOrder, ...orders],
@@ -117,32 +116,20 @@ export const useP2PStore = create<P2PStore>((set, get) => ({
       return newOrder;
     } catch (error) {
       console.error('Failed to create P2P order:', error);
-      set({ isLoading: false, error: 'Failed to create order' });
+      set({ isLoading: false });
       throw error;
     }
   },
 
-  fetchMyOrders: async () => {
-    set({ isLoading: true, error: null });
+  updateOrder: async (orderId, updates) => {
+    set({ isLoading: true });
     try {
-      // In a real app, this would fetch user-specific orders
-      const myOrders = generateMockP2POrders(5);
-      set({ myOrders, isLoading: false });
-    } catch (error) {
-      console.error('Failed to fetch my P2P orders:', error);
-      set({ isLoading: false, error: 'Failed to fetch my orders' });
-    }
-  },
-
-  cancelOrder: async (orderId) => {
-    set({ isLoading: true, error: null });
-    try {
-      await mockUpdateP2POrder(orderId, { status: 'cancelled' });
+      await mockUpdateP2POrder(orderId, updates);
       const { orders, myOrders } = get();
       
       const updateOrderInArray = (orderArray: P2POrder[]) =>
         orderArray.map(order => 
-          order.id === orderId ? { ...order, status: 'cancelled' as const } : order
+          order.id === orderId ? { ...order, ...updates } : order
         );
       
       set({ 
@@ -151,98 +138,31 @@ export const useP2PStore = create<P2PStore>((set, get) => ({
         isLoading: false 
       });
     } catch (error) {
-      console.error('Failed to cancel P2P order:', error);
-      set({ isLoading: false, error: 'Failed to cancel order' });
-      throw error;
-    }
-  },
-
-  executeOrder: async (orderId) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Mock transaction creation
-      const transaction: P2PTransaction = {
-        id: generateId(),
-        orderId,
-        buyerId: 'mock-buyer-id',
-        sellerId: 'mock-seller-id',
-        amount: 100,
-        price: 50,
-        status: 'completed',
-        createdAt: new Date().toISOString(),
-        completedAt: new Date().toISOString()
-      };
-      
-      const { transactions } = get();
-      set({ 
-        transactions: [transaction, ...transactions],
-        isLoading: false 
-      });
-      return transaction;
-    } catch (error) {
-      console.error('Failed to execute P2P order:', error);
-      set({ isLoading: false, error: 'Failed to execute order' });
-      throw error;
-    }
-  },
-
-  listAsset: async (orderId, tokenAddress, amount) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Mock smart contract interaction
-      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+      console.error('Failed to update P2P order:', error);
       set({ isLoading: false });
-      return txHash;
-    } catch (error) {
-      console.error('Failed to list asset:', error);
-      set({ isLoading: false, error: 'Failed to list asset' });
       throw error;
     }
   },
 
-  initiateTrade: async (orderId, buyerAddress) => {
-    set({ isLoading: true, error: null });
+  fetchMyOrders: async () => {
+    set({ isLoading: true });
     try {
-      // Mock smart contract interaction
-      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      set({ isLoading: false });
-      return txHash;
+      // In a real app, this would fetch user-specific orders
+      const myOrders = generateMockP2POrders(5);
+      set({ myOrders, isLoading: false });
     } catch (error) {
-      console.error('Failed to initiate trade:', error);
-      set({ isLoading: false, error: 'Failed to initiate trade' });
-      throw error;
+      console.error('Failed to fetch my P2P orders:', error);
+      set({ isLoading: false });
     }
   },
 
-  depositAndExecute: async (orderId, paymentAmount) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Mock smart contract interaction
-      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      set({ isLoading: false });
-      return txHash;
-    } catch (error) {
-      console.error('Failed to deposit and execute:', error);
-      set({ isLoading: false, error: 'Failed to deposit and execute' });
-      throw error;
-    }
+  setFilters: (filters) => {
+    set({ currentFilters: { ...get().currentFilters, ...filters } });
+    get().fetchOrders(filters);
   },
 
-  reclaimAsset: async (orderId) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Mock smart contract interaction
-      const txHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      set({ isLoading: false });
-      return txHash;
-    } catch (error) {
-      console.error('Failed to reclaim asset:', error);
-      set({ isLoading: false, error: 'Failed to reclaim asset' });
-      throw error;
-    }
-  },
-
-  clearError: () => {
-    set({ error: null });
+  refreshOrders: async () => {
+    const { currentFilters } = get();
+    await get().fetchOrders(currentFilters);
   },
 }));

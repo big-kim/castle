@@ -2,8 +2,8 @@
  * Wallet API routes
  * Handle BNB wallet, point wallet, NFT wallet operations
  */
-import express, { Request, Response } from 'express'
-import { requireAuth, walletRateLimit, validateWalletInput, securityHeaders, AuthenticatedRequest } from '../middleware/auth'
+import express from 'express'
+import { requireAuth, walletRateLimit, validateWalletInput, securityHeaders } from '../middleware/auth'
 import { dbManager } from '../database'
 import QRCode from 'qrcode'
 import crypto from 'crypto'
@@ -24,7 +24,7 @@ const MINING_COINS = ['LTC', 'DOGE', 'BELLS', 'PEP', 'JKC', 'LKY', 'DINGO', 'SHI
  * Get wallet overview
  * GET /api/wallet/overview
  */
-router.get('/overview', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/overview', async (req, res) => {
   try {
     const userId = req.user?.id
     
@@ -97,7 +97,7 @@ router.get('/overview', async (req: AuthenticatedRequest, res: Response) => {
  * Get BNB wallet details
  * GET /api/wallet/bnb
  */
-router.get('/bnb', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/bnb', async (req, res) => {
   try {
     const userId = req.user?.id;
     
@@ -138,7 +138,7 @@ router.get('/bnb', async (req: AuthenticatedRequest, res: Response) => {
  * Send BNB
  * POST /api/wallet/bnb/send
  */
-router.post('/bnb/send', walletRateLimit(5, 60000), validateWalletInput, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/bnb/send', walletRateLimit(5, 60000), validateWalletInput, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { toAddress, amount, memo } = req.body;
@@ -206,12 +206,15 @@ router.post('/bnb/send', walletRateLimit(5, 60000), validateWalletInput, async (
  * Get BNB transaction history
  * GET /api/wallet/bnb/transactions
  */
-router.get('/bnb/transactions', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/bnb/transactions', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id
     const { page = 1, limit = 20 } = req.query
     
-    const transactions = await dbManager.getBNBTransactions(userId, Number(limit))
+    const transactions = await dbManager.getBNBTransactions(userId, {
+      page: Number(page),
+      limit: Number(limit)
+    })
     
     res.json({
       success: true,
@@ -234,7 +237,7 @@ router.get('/bnb/transactions', async (req: AuthenticatedRequest, res: Response)
  * Get point wallets (8 mining coins)
  * GET /api/wallet/points
  */
-router.get('/points', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/points', async (req, res) => {
   try {
     const userId = req.user?.id;
     
@@ -273,7 +276,7 @@ router.get('/points', async (req: AuthenticatedRequest, res: Response) => {
  * Add mining earnings
  * POST /api/wallet/points/earn
  */
-router.post('/points/earn', walletRateLimit(10, 60000), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/points/earn', walletRateLimit(10, 60000), async (req, res) => {
   try {
     const userId = req.user?.id;
     const { coinSymbol, amount } = req.body;
@@ -316,7 +319,7 @@ router.post('/points/earn', walletRateLimit(10, 60000), async (req: Authenticate
  * Withdraw mining coins
  * POST /api/wallet/points/withdraw
  */
-router.post('/points/withdraw', walletRateLimit(3, 60000), validateWalletInput, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/points/withdraw', walletRateLimit(3, 60000), validateWalletInput, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { coinSymbol, amount, toAddress } = req.body;
@@ -382,7 +385,7 @@ router.post('/points/withdraw', walletRateLimit(3, 60000), validateWalletInput, 
  * Get point transaction history
  * GET /api/wallet/points/transactions
  */
-router.get('/points/transactions', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/points/transactions', async (req, res) => {
   try {
     const userId = req.user?.id;
     const { coinSymbol, limit } = req.query;
@@ -408,7 +411,7 @@ router.get('/points/transactions', async (req: AuthenticatedRequest, res: Respon
  * Get NFT wallet items
  * GET /api/wallet/nft
  */
-router.get('/nft', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/nft', async (req, res) => {
   try {
     const userId = req.user?.id;
     
@@ -456,7 +459,7 @@ router.get('/nft', async (req: AuthenticatedRequest, res: Response) => {
  * Send NFT
  * POST /api/wallet/nft/send
  */
-router.post('/nft/send', walletRateLimit(2, 60000), validateWalletInput, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/nft/send', walletRateLimit(2, 60000), validateWalletInput, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { nftId, toAddress, memo } = req.body;
@@ -516,7 +519,7 @@ router.post('/nft/send', walletRateLimit(2, 60000), validateWalletInput, async (
  * Buy NFT (Gift Card)
  * POST /api/wallet/nft/buy
  */
-router.post('/nft/buy', walletRateLimit(5, 60000), validateWalletInput, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/nft/buy', walletRateLimit(5, 60000), validateWalletInput, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { nftType, value, paymentMethod } = req.body;
@@ -588,7 +591,7 @@ router.post('/nft/buy', walletRateLimit(5, 60000), validateWalletInput, async (r
  * Get NFT transaction history
  * GET /api/wallet/nft/transactions
  */
-router.get('/nft/transactions', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/nft/transactions', async (req, res) => {
   try {
     const userId = req.user?.id;
     const { limit = 50 } = req.query;
@@ -609,7 +612,7 @@ router.get('/nft/transactions', async (req: AuthenticatedRequest, res: Response)
  * Generate QR code for receiving
  * GET /api/wallet/qr/:walletType
  */
-router.get('/qr/:walletType', walletRateLimit(10, 60000), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/qr/:walletType', walletRateLimit(10, 60000), async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id
     const { walletType } = req.params
@@ -660,7 +663,7 @@ router.get('/qr/:walletType', walletRateLimit(10, 60000), async (req: Authentica
 })
 
 // QR Code generation
-router.post('/qr/generate', walletRateLimit(10, 60000), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/qr/generate', walletRateLimit(10, 60000), async (req, res) => {
   try {
     const userId = req.user?.id;
     const { type, amount, memo } = req.body;

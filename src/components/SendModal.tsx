@@ -46,7 +46,7 @@ export const SendModal: React.FC<SendModalProps> = ({
       const token = availableTokens.find(t => t.symbol === selectedToken);
       return token?.balance || 0;
     } else if (assetType === 'point' && coinType) {
-      const pointWallet = overview?.pointWallets?.find(w => w.symbol === coinType);
+      const pointWallet = overview?.pointWallets?.find(w => w.coinType === coinType);
       return pointWallet?.balance || 0;
     }
     return 0;

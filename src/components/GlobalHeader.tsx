@@ -132,9 +132,9 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({
              >
               {/* Avatar */}
               <div className="relative">
-                {user.profileImage ? (
+                {user.profile_image ? (
                   <img
-                    src={user.profileImage}
+                    src={user.profile_image}
                     alt={user.name}
                     className="w-10 h-10 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary/40 transition-colors"
                   />

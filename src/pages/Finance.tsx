@@ -55,9 +55,9 @@ const StakingCard: React.FC<StakingCardProps> = ({ product, onStake }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="text-3xl">{getProductIcon(product.productType)}</div>
+          <div className="text-3xl">{getProductIcon(product.product_type)}</div>
           <div>
-            <h3 className="font-semibold text-gray-900">{getProductName(product.productType)}</h3>
+            <h3 className="font-semibold text-gray-900">{getProductName(product.product_type)}</h3>
             <p className="text-sm text-gray-500">{product.duration} days</p>
           </div>
         </div>
@@ -206,7 +206,7 @@ const LoanCard: React.FC<LoanCardProps> = ({ product, onLoan }) => {
     return { level: '저위험', color: 'text-green-600 bg-green-50' };
   };
 
-  const risk = getRiskLevel(product.interestRate);
+  const risk = getRiskLevel(product.interest_rate);
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -588,8 +588,6 @@ export const Finance: React.FC = () => {
       amount: 125.50,
       status: 'completed',
       createdAt: '2024-01-15T10:30:00Z',
-      date: '2024-01-15T10:30:00Z',
-      type: 'stakingReward',
     },
     {
       id: '2',
@@ -597,8 +595,6 @@ export const Finance: React.FC = () => {
       amount: 1000.00,
       status: 'completed',
       createdAt: '2024-01-14T15:20:00Z',
-      date: '2024-01-14T15:20:00Z',
-      type: 'deposit',
     },
     {
       id: '3',
@@ -606,8 +602,6 @@ export const Finance: React.FC = () => {
       amount: 500.00,
       status: 'pending',
       createdAt: '2024-01-13T09:15:00Z',
-      date: '2024-01-13T09:15:00Z',
-      type: 'withdrawal',
     },
     {
       id: '4',
@@ -615,8 +609,6 @@ export const Finance: React.FC = () => {
       amount: 87.25,
       status: 'completed',
       createdAt: '2024-01-12T14:45:00Z',
-      date: '2024-01-12T14:45:00Z',
-      type: 'stakingReward',
     },
   ];
 

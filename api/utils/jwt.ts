@@ -25,7 +25,7 @@ export const generateToken = (user: User): string => {
 
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
 
-  return jwt.sign(payload, secret, { expiresIn: expiresIn as any });
+  return jwt.sign(payload, secret, { expiresIn });
 };
 
 export const verifyToken = (token: string): JWTPayload => {

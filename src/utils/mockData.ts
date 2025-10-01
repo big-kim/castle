@@ -247,8 +247,8 @@ export const generateMockGiftCardProducts = (): GiftCardProduct[] => [
 /**
  * Generic mock fetch function with error simulation
  */
-export const createMockFetch = <T, TArgs extends any[] = []>(
-  dataGenerator: (...args: TArgs) => T,
+export const createMockFetch = <T>(
+  dataGenerator: () => T,
   options: {
     delay?: [number, number];
     errorRate?: number;
@@ -261,14 +261,14 @@ export const createMockFetch = <T, TArgs extends any[] = []>(
     errorMessage = 'Mock API Error' 
   } = options;
 
-  return async (...args: TArgs): Promise<T> => {
+  return async (): Promise<T> => {
     await createMockDelay(delay[0], delay[1]);
     
     if (Math.random() < errorRate) {
       throw new Error(errorMessage);
     }
     
-    return dataGenerator(...args);
+    return dataGenerator();
   };
 };
 

@@ -11,7 +11,6 @@ export interface User {
   provider: 'local' | 'kakao' | 'google' | 'apple';
   providerId?: string;
   avatar?: string;
-  nftAddress?: string;
   createdAt: string;
   updatedAt: string;
 }

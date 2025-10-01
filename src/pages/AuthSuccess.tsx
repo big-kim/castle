@@ -26,19 +26,9 @@ const AuthSuccess = () => {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setUser({
           id: payload.userId,
-          icastleId: payload.icastleId || `ic_${payload.userId}`,
           email: payload.email,
           name: payload.name,
-          socialProvider: payload.provider,
-          settings: {
-            appLockEnabled: false,
-            notificationsEnabled: true,
-            biometricEnabled: false,
-            language: 'ko',
-            currency: 'USDT'
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          provider: payload.provider
         });
         
         // Redirect to home

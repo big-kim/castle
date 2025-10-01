@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export interface TabButtonProps {
+interface TabButtonProps {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;

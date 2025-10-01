@@ -6,7 +6,7 @@ import { Router, type Request, type Response } from 'express'
 import passport from '../passport'
 import { dbManager } from '../database'
 import { generateToken } from '../utils/jwt'
-import { authenticateToken, AuthenticatedRequest } from '../middleware/auth'
+import { authenticateToken } from '../middleware/auth'
 import 'dotenv/config'
 
 const router = Router()
@@ -186,7 +186,7 @@ router.post('/logout', authenticateToken, async (req: Request, res: Response): P
  * Get Current User
  * GET /api/auth/me
  */
-router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/me', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await dbManager.findUserById(req.user!.id);
     if (!user) {
@@ -284,17 +284,16 @@ router.get('/google', (req: Request, res: Response, next) => {
     }
     
     console.log('Initiating Google OAuth authentication');
+    console.log('Available passport strategies:', Object.keys(passport._strategies || {}));
     
-    // Check if Google strategy is configured by attempting to use it
-    try {
-      const authenticator = passport.authenticate('google', { scope: ['profile', 'email'] });
-      console.log('Google authenticator created successfully');
-      authenticator(req, res, next);
-      return;
-    } catch (strategyError) {
+    if (!passport._strategies || !passport._strategies.google) {
       console.error('Google strategy not found in passport');
       return res.status(500).json({ success: false, error: 'Google OAuth strategy not configured' });
     }
+    
+    const authenticator = passport.authenticate('google', { scope: ['profile', 'email'] });
+    console.log('Google authenticator created successfully');
+    authenticator(req, res, next);
   } catch (error) {
     console.error('Google OAuth error:', error);
     console.error('Error stack:', error.stack);

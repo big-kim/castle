@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GiftStore, GiftCardProduct, GiftCard, GiftCardPurchaseForm } from '../types';
+import type { GiftStore, GiftCardProduct } from '../types';
 import { createMockFetch, generateRandomNumber, generateId } from '../utils/mockData';
 
 // ============================================================================
@@ -8,21 +8,19 @@ import { createMockFetch, generateRandomNumber, generateId } from '../utils/mock
 
 const generateMockGiftCardProduct = (): GiftCardProduct => ({
   id: generateId(),
-  cardType: ['starbucks', 'cgv', 'lotte', 'gmarket'][Math.floor(Math.random() * 4)] as any,
-  name: ['Starbucks Gift Card', 'CGV Gift Card', 'Lotte Gift Card', 'Gmarket Gift Card'][Math.floor(Math.random() * 4)],
-  description: 'Premium gift card with instant delivery',
-  faceValues: [10000, 25000, 50000, 100000],
-  discountRate: generateRandomNumber(5, 20) / 100,
-  imageUrl: '/images/gift-card-placeholder.png',
-  isAvailable: Math.random() > 0.1,
-  category: ['food', 'shopping', 'entertainment', 'digital'][Math.floor(Math.random() * 4)],
-  stock: generateRandomNumber(10, 100),
+  name: ['Starbucks Gift Card', 'Amazon Gift Card', 'Google Play Gift Card', 'iTunes Gift Card'][Math.floor(Math.random() * 4)],
+  brand: ['Starbucks', 'Amazon', 'Google', 'Apple'][Math.floor(Math.random() * 4)],
+  category: ['food', 'shopping', 'entertainment', 'digital'][Math.floor(Math.random() * 4)] as any,
+  denomination: [10000, 25000, 50000, 100000][Math.floor(Math.random() * 4)],
   price: generateRandomNumber(9000, 95000),
-  originalPrice: generateRandomNumber(10000, 100000),
-  rating: generateRandomNumber(40, 50) / 10,
-  reviews: generateRandomNumber(100, 1000),
-  validityDays: 365,
-  brand: ['starbucks', 'cgv', 'lotte', 'gmarket'][Math.floor(Math.random() * 4)],
+  discountRate: generateRandomNumber(5, 20),
+  imageUrl: '/images/gift-card-placeholder.png',
+  description: 'Premium gift card with instant delivery',
+  isAvailable: Math.random() > 0.1,
+  validityPeriod: '1 year from purchase',
+  termsAndConditions: 'Standard terms and conditions apply',
+  createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 3600000).toISOString(),
+  updatedAt: new Date().toISOString(),
 });
 
 const generateMockGiftCardProducts = (count: number = 20): GiftCardProduct[] => {
@@ -100,15 +98,23 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
   // State
   products: [],
   userGiftCards: [],
+  purchaseHistory: [],
   isLoading: false,
+  currentFilters: {
+    category: undefined,
+    brand: undefined,
+    minPrice: undefined,
+    maxPrice: undefined,
+  },
 
   // Actions
-  fetchProducts: async () => {
+  fetchProducts: async (filters) => {
     set({ isLoading: true });
     try {
-      const products = await mockFetchGiftCardProducts();
+      const products = await mockFetchGiftCardProducts(filters);
       set({ 
         products, 
+        currentFilters: { ...get().currentFilters, ...filters },
         isLoading: false 
       });
     } catch (error) {
@@ -121,21 +127,17 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
     set({ isLoading: true });
     try {
       // Mock user gift cards - in real app, this would fetch from API
-      const userGiftCards: GiftCard[] = Array.from({ length: 3 }, (_, index) => ({
+      const userGiftCards = Array.from({ length: 3 }, (_, index) => ({
         id: generateId(),
-        userId: 'user-123',
-        cardType: ['starbucks', 'cgv', 'lotte'][index % 3] as any,
-        faceValue: [25000, 50000, 100000][index % 3],
-        currentBalance: [25000, 45000, 80000][index % 3],
-        nftTokenId: `nft-${generateId()}`,
-        createdAt: new Date(Date.now() - index * 7 * 24 * 3600000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        brand: ['starbucks', 'cgv', 'lotte'][index % 3],
-        productName: ['Starbucks Gift Card', 'CGV Gift Card', 'Lotte Gift Card'][index % 3],
+        code: `GC-${Math.random().toString(36).substr(2, 12).toUpperCase()}`,
+        pin: Math.random().toString().substr(2, 4),
+        productName: ['Starbucks Gift Card', 'Amazon Gift Card', 'Google Play Gift Card'][index % 3],
+        denomination: [25000, 50000, 100000][index % 3],
+        balance: [25000, 45000, 80000][index % 3],
+        expiryDate: new Date(Date.now() + 365 * 24 * 3600000).toISOString(),
+        purchaseDate: new Date(Date.now() - index * 7 * 24 * 3600000).toISOString(),
         status: 'active' as const,
-        cardNumber: `****-****-****-${Math.floor(1000 + Math.random() * 9000)}`,
-        expiresAt: new Date(Date.now() + 365 * 24 * 3600000).toISOString(),
-        pin: Math.floor(1000 + Math.random() * 9000).toString(),
+        imageUrl: '/images/gift-card-placeholder.png',
       }));
       
       set({ userGiftCards, isLoading: false });
@@ -145,77 +147,55 @@ export const useGiftStore = create<GiftStore>((set, get) => ({
     }
   },
 
-
-
-  purchaseGiftCard: async (form: GiftCardPurchaseForm): Promise<GiftCard> => {
+  purchaseGiftCard: async (productId, quantity = 1) => {
     set({ isLoading: true });
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const purchaseResult = await mockPurchaseGiftCard(productId, quantity);
       
-      const newGiftCard: GiftCard = {
-        id: `gift-${Date.now()}`,
-        userId: 'user-123',
-        cardType: form.cardType,
-        faceValue: form.faceValue,
-        currentBalance: form.faceValue,
-        nftTokenId: `nft-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'active',
-        cardNumber: `****-****-****-${Math.floor(1000 + Math.random() * 9000)}`,
-        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        pin: Math.floor(1000 + Math.random() * 9000).toString()
+      // Add to purchase history
+      const { purchaseHistory } = get();
+      const newPurchase = {
+        id: purchaseResult.orderId,
+        productId,
+        productName: get().products.find(p => p.id === productId)?.name || 'Unknown Product',
+        quantity,
+        totalAmount: purchaseResult.totalAmount,
+        purchaseDate: purchaseResult.purchaseDate,
+        status: 'completed' as const,
+        giftCards: purchaseResult.giftCards,
       };
       
-      set(state => ({
-        userGiftCards: [...state.userGiftCards, newGiftCard],
-        isLoading: false
-      }));
+      set({ 
+        purchaseHistory: [newPurchase, ...purchaseHistory],
+        isLoading: false 
+      });
       
-      return newGiftCard;
+      return purchaseResult;
     } catch (error) {
+      console.error('Failed to purchase gift card:', error);
       set({ isLoading: false });
       throw error;
     }
   },
 
-  generateQRCode: async (giftCardId: string): Promise<string> => {
+  fetchPurchaseHistory: async () => {
     set({ isLoading: true });
     try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const qrCode = `qr-${giftCardId}-${Date.now()}`;
-      set({ isLoading: false });
-      return qrCode;
+      const purchaseHistory = await mockGetPurchaseHistory();
+      set({ purchaseHistory, isLoading: false });
     } catch (error) {
+      console.error('Failed to fetch purchase history:', error);
       set({ isLoading: false });
-      throw error;
     }
   },
 
-  useGiftCard: async (giftCardId: string, amount: number): Promise<void> => {
-    set({ isLoading: true });
-    try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      set(state => ({
-        userGiftCards: state.userGiftCards.map(card => 
-          card.id === giftCardId 
-            ? { 
-                ...card, 
-                currentBalance: Math.max(0, card.currentBalance - amount),
-                updatedAt: new Date().toISOString()
-              }
-            : card
-        ),
-        isLoading: false
-      }));
-    } catch (error) {
-      set({ isLoading: false });
-      throw error;
-    }
-  }
+  setFilters: (filters) => {
+    set({ currentFilters: { ...get().currentFilters, ...filters } });
+    get().fetchProducts(filters);
+  },
+
+  refreshProducts: async () => {
+    const { currentFilters } = get();
+    await get().fetchProducts(currentFilters);
+  },
 }));

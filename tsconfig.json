@@ -16,8 +16,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,

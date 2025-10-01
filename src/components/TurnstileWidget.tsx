@@ -9,11 +9,6 @@ interface TurnstileWidgetProps {
   size?: 'normal' | 'compact';
 }
 
-interface TurnstileWidgetRef {
-  reset: () => void;
-  getResponse: () => string;
-}
-
 // Extend the global Window interface to include turnstile
 declare global {
   interface Window {
@@ -26,14 +21,14 @@ declare global {
   }
 }
 
-export const TurnstileWidget = React.forwardRef<TurnstileWidgetRef, TurnstileWidgetProps>(({
+export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   onVerify,
   onError,
   onExpire,
   className = '',
   theme = 'light',
   size = 'normal'
-}, ref) => {
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -200,7 +195,7 @@ export const TurnstileWidget = React.forwardRef<TurnstileWidgetRef, TurnstileWid
   };
 
   // Expose reset and getResponse methods via ref
-  React.useImperativeHandle(ref, () => ({
+  React.useImperativeHandle(containerRef, () => ({
     reset,
     getResponse
   }));
@@ -237,6 +232,6 @@ export const TurnstileWidget = React.forwardRef<TurnstileWidgetRef, TurnstileWid
       )}
     </div>
   );
-});
+};
 
 export default TurnstileWidget;

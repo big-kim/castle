@@ -52,7 +52,10 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
 
   // Get receive address based on asset type
   const getReceiveAddress = () => {
-    // Fallback addresses since qrData is a string
+    if (qrData?.address) {
+      return qrData.address;
+    }
+    // Fallback addresses
     if (assetType === 'bnb') {
       return '0x1234567890abcdef1234567890abcdef12345678';
     } else if (assetType === 'point') {
@@ -71,7 +74,7 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
       setCopied(false);
       // Generate QR code when modal opens
       console.log('Generating QR code for:', { assetType, tokenToSet });
-      generateQRCode(assetType, undefined, undefined);
+      generateQRCode(assetType, undefined, undefined, tokenToSet);
     }
   }, [isOpen, assetType, coinType, generateQRCode]);
 
@@ -104,9 +107,9 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
   };
 
   const handleDownloadQR = () => {
-    if (qrData) {
+    if (qrData?.qrCode) {
       const link = document.createElement('a');
-      const svgBlob = new Blob([qrData], { type: 'image/svg+xml' });
+      const svgBlob = new Blob([qrData.qrCode], { type: 'image/svg+xml' });
       link.href = URL.createObjectURL(svgBlob);
       link.download = `${assetType === 'bnb' ? selectedToken : coinType}_receive_qr.svg`;
       document.body.appendChild(link);
@@ -143,7 +146,7 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
     setShowTokenDropdown(false);
     // Generate new QR code for selected token
     console.log('Token changed to:', tokenSymbol);
-    generateQRCode(assetType, undefined, undefined);
+    generateQRCode(assetType, undefined, undefined, tokenSymbol);
   };
 
   if (!isOpen) return null;
@@ -269,10 +272,10 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
                   <div className="w-48 h-48 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
-                ) : qrData ? (
+                ) : qrData?.qrCode ? (
                   <div 
                     className="w-48 h-48 flex items-center justify-center"
-                    dangerouslySetInnerHTML={{ __html: qrData }}
+                    dangerouslySetInnerHTML={{ __html: qrData.qrCode }}
                   />
                 ) : (
                   <div className="w-48 h-48 flex items-center justify-center bg-gray-100 rounded-lg">
@@ -315,7 +318,7 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
               
               <button
                 onClick={handleDownloadQR}
-                disabled={!qrData}
+                disabled={!qrData?.qrCode}
                 className="flex flex-col items-center space-y-2 p-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-5 h-5" />

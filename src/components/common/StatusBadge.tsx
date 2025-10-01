@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export interface StatusBadgeProps {
+interface StatusBadgeProps {
   status: 'active' | 'completed' | 'cancelled' | 'pending';
   children?: React.ReactNode;
   className?: string;

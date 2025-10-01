@@ -98,7 +98,7 @@ const NotificationSection: React.FC = () => {
   const handleNotificationToggle = (type: 'p2p' | 'deposits' | 'withdrawals', enabled: boolean) => {
     updateSettings({
       ...user?.settings,
-      notificationsEnabled: enabled
+      notifications: enabled
     });
   };
 
@@ -123,7 +123,7 @@ const NotificationSection: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user?.settings.notificationsEnabled || false}
+              checked={user?.settings.notifications || false}
               onChange={(e) => handleNotificationToggle('p2p', e.target.checked)}
               className="sr-only peer"
             />
@@ -144,7 +144,7 @@ const NotificationSection: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user?.settings.notificationsEnabled || false}
+              checked={user?.settings.notifications || false}
               onChange={(e) => handleNotificationToggle('deposits', e.target.checked)}
               className="sr-only peer"
             />
@@ -165,7 +165,7 @@ const NotificationSection: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={user?.settings.notificationsEnabled || false}
+              checked={user?.settings.notifications || false}
               onChange={(e) => handleNotificationToggle('withdrawals', e.target.checked)}
               className="sr-only peer"
             />
@@ -287,12 +287,12 @@ const SecuritySection: React.FC = () => {
   const [pinError, setPinError] = useState('');
 
   const handleAppLockToggle = (enabled: boolean) => {
-    if (enabled && !user?.settings?.appLockEnabled) {
+    if (enabled && !user?.settings?.app_lock_enabled) {
       setShowPinSetup(true);
     } else if (!enabled) {
       updateSettings({
         ...user?.settings,
-        appLockEnabled: false, biometricEnabled: false
+        app_lock_enabled: false, biometric_enabled: false
       });
     }
   };
@@ -303,7 +303,7 @@ const SecuritySection: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
         updateSettings({
           ...user?.settings,
-          appLockEnabled: true, biometricEnabled: true
+          app_lock_enabled: true, biometric_enabled: true
         });
       } catch (error) {
         console.error('Biometric setup failed:', error);
@@ -311,7 +311,7 @@ const SecuritySection: React.FC = () => {
     } else {
       updateSettings({
         ...user?.settings,
-        appLockEnabled: false, biometricEnabled: false
+        app_lock_enabled: false, biometric_enabled: false
       });
     }
   };
@@ -328,7 +328,7 @@ const SecuritySection: React.FC = () => {
     
     updateSettings({
       ...user?.settings,
-      appLockEnabled: true
+      app_lock_enabled: true
     });
     
     setShowPinSetup(false);
@@ -374,11 +374,11 @@ const SecuritySection: React.FC = () => {
       <ToggleSetting
         icon={<Lock className="w-5 h-5" />}
         title="앱 잠금"
-        description={user?.settings?.appLockEnabled
+        description={user?.settings?.app_lock_enabled
            ? '앱 잠금이 활성화되었습니다'
            : 'PIN 또는 생체 인증이 필요합니다'
          }
-        enabled={user?.settings?.appLockEnabled || false}
+        enabled={user?.settings?.app_lock_enabled || false}
         onChange={handleAppLockToggle}
       />
       
@@ -386,7 +386,7 @@ const SecuritySection: React.FC = () => {
         icon={<Fingerprint className="w-5 h-5" />}
         title="생체 인증"
         description="빠른 접근을 위해 지문 또는 Face ID를 사용하세요"
-        enabled={user?.settings?.biometricEnabled || false}
+        enabled={user?.settings?.biometric_enabled || false}
         onChange={handleBiometricToggle}
       />
       

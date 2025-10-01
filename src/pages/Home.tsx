@@ -340,10 +340,10 @@ export const Home: React.FC = () => {
         <h2 className="text-lg font-medium mb-4">총 자산</h2>
         <div className="space-y-2">
           <p className="text-3xl font-bold">
-            ${formatCurrency(overview?.totalValue || summary?.totalValueUsdt || 0)}
+            ${formatCurrency(overview?.totalValue || summary?.total_value_usdt || 0)}
           </p>
           <p className="text-white/80 text-sm">
-            ≈ {formatTokenAmount(overview?.totalValue || summary?.totalValueUsdt || 0, 2)} USDT
+            ≈ {formatTokenAmount(overview?.totalValue || summary?.total_value_usdt || 0, 2)} USDT
           </p>
         </div>
       </div>
@@ -425,8 +425,8 @@ export const Home: React.FC = () => {
                 <div key={nft.id} className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-3 border border-purple-200">
                   <div className="aspect-square bg-white rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                     <img 
-                      src={nft.imageUrl} 
-                      alt={nft.name}
+                      src={nft.metadata.image} 
+                      alt={nft.metadata.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -435,20 +435,20 @@ export const Home: React.FC = () => {
                       }}
                     />
                     <div className="hidden w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">{nft.name.charAt(0)}</span>
+                      <span className="text-white font-bold text-lg">{nft.metadata.name.charAt(0)}</span>
                     </div>
                   </div>
-                  <h3 className="font-medium text-gray-900 text-sm truncate">{nft.name}</h3>
-                  <p className="text-xs text-gray-600 mt-1">${nft.value}</p>
+                  <h3 className="font-medium text-gray-900 text-sm truncate">{nft.metadata.name}</h3>
+                  <p className="text-xs text-gray-600 mt-1">{nft.metadata.description}</p>
                 </div>
               )) :
               userGiftCards?.slice(0, 6).map((card) => (
                 <GiftCardNFT
                   key={card.id}
                   id={card.id}
-                  cardType={card.cardType}
-                  faceValue={card.faceValue}
-                  currentBalance={card.currentBalance}
+                  cardType={card.card_type}
+                  faceValue={card.face_value}
+                  currentBalance={card.current_balance}
                   onClick={() => navigate('/gift')}
                 />
               ))

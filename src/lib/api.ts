@@ -32,28 +32,28 @@ export const api = {
 
   // GET request
   async get<T>(endpoint: string): Promise<T> {
-    return this.request(endpoint, { method: 'GET' }) as Promise<T>;
+    return this.request<T>(endpoint, { method: 'GET' });
   },
 
   // POST request
   async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request(endpoint, {
+    return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-    }) as Promise<T>;
+    });
   },
 
   // PUT request
   async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request(endpoint, {
+    return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
-    }) as Promise<T>;
+    });
   },
 
   // DELETE request
   async delete<T>(endpoint: string): Promise<T> {
-    return this.request(endpoint, { method: 'DELETE' }) as Promise<T>;
+    return this.request<T>(endpoint, { method: 'DELETE' });
   },
 };
 

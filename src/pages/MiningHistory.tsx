@@ -54,7 +54,6 @@ const MiningHistory: React.FC = () => {
   } = useMiningStore();
 
   const [currentDepositHistory, setCurrentDepositHistory] = useState<DailyDepositRecord[]>([]);
-  const [currentWithdrawalHistory, setCurrentWithdrawalHistory] = useState<any[]>([]);
   const [coinexEmail, setCoinexEmail] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -88,22 +87,8 @@ const MiningHistory: React.FC = () => {
       
       const history = generateDepositHistory(coinSymbol, hashRate, price);
       setCurrentDepositHistory(history);
-      
-      // Load withdrawal history
-      const loadWithdrawalHistory = async () => {
-        try {
-          const withdrawalHistory = await getWithdrawalHistory();
-          const filteredHistory = withdrawalHistory.filter(record => record.coinSymbol === coinSymbol);
-          setCurrentWithdrawalHistory(filteredHistory);
-        } catch (error) {
-          console.error('Failed to load withdrawal history:', error);
-          setCurrentWithdrawalHistory([]);
-        }
-      };
-      
-      loadWithdrawalHistory();
     }
-  }, [coinSymbol, generateDepositHistory, getWithdrawalHistory, miningData]);
+  }, [coinSymbol, generateDepositHistory, miningData]);
 
   const currentAccount = getCoinEXAccount(mockUserId);
   const totalEarnings = currentDepositHistory.reduce((sum, record) => sum + record.amount, 0);
@@ -377,7 +362,7 @@ const MiningHistory: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h3 className="text-body font-semibold text-gray-900 mb-4">출금 내역</h3>
             <div className="overflow-x-auto">
-              {currentWithdrawalHistory.length === 0 ? (
+              {getWithdrawalHistory().filter(record => record.coinSymbol === coinSymbol).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   출금 내역이 없습니다.
                 </div>
@@ -392,7 +377,9 @@ const MiningHistory: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentWithdrawalHistory.map((record, index) => (
+                    {getWithdrawalHistory()
+                      .filter(record => record.coinSymbol === coinSymbol)
+                      .map((record, index) => (
                       <tr key={`${record.id}-${index}`} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-3 px-4 text-body-sm text-gray-900">
                           {new Date(record.timestamp).toLocaleDateString('ko-KR')}

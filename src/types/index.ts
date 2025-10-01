@@ -20,7 +20,7 @@ export type NavigationTab = 'home' | 'p2p' | 'mining' | 'finance' | 'gift';
 export type Language = 'ko' | 'en';
 export type Currency = 'USDT';
 export type RiskLevel = 'low' | 'medium' | 'high';
-export type RecordStatus = 'active' | 'completed' | 'cancelled' | 'defaulted';
+export type RecordStatus = 'active' | 'completed' | 'cancelled';
 
 // ============================================================================
 // USER & AUTHENTICATION
@@ -40,7 +40,6 @@ export interface User {
   email: string;
   name: string;
   profileImage?: string;
-  avatar?: string;
   walletAddress?: string;
   socialProvider?: string;
   settings: UserSettings;
@@ -315,6 +314,7 @@ export interface LendRecord extends BaseFinanceRecord {
 
 export interface LoanRecord extends BaseFinanceRecord {
   interestRate: number;
+  status: RecordStatus | 'defaulted';
   totalInterest: number;
   paidInterest: number;
   remainingBalance: number;
@@ -479,9 +479,6 @@ export interface MiningStore {
   dailyRewardTotal: number;
   isLoading: boolean;
   isWithdrawing: boolean;
-  coinexAccounts: any[];
-  depositHistory: any[];
-  withdrawalHistory: any[];
   fetchActivities: () => Promise<void>;
   fetchSummary: () => Promise<void>;
   fetchMiningData: () => Promise<void>;
@@ -490,12 +487,6 @@ export interface MiningStore {
   stopMining: (coinId: string) => Promise<void>;
   claimReward: (coinId: string) => Promise<void>;
   withdraw: (tokenSymbol: string, amount: number, withdrawalAddress: string) => Promise<void>;
-  registerCoinEXAccount: (userId: string, email: string) => Promise<void>;
-  getCoinEXAccount: (userId: string) => any;
-  generateDepositHistory: (coinSymbol: string, hashRate: number, price: number) => any[];
-  withdrawToCoinEX: (coinSymbol: string, amount: number, email: string) => Promise<void>;
-  getWithdrawalHistory: () => Promise<any[]>;
-  getAvailableBalance: (coinSymbol: string) => number;
 }
 
 export interface FinanceStore {
@@ -522,25 +513,6 @@ export interface GiftStore {
 export interface WalletOverview {
   totalBalance: number;
   totalBalanceUsdt: number;
-  totalValue?: number;
-  bnbWallet?: {
-    address: string;
-    balance: number;
-    usdtValue: number;
-  };
-  pointWallets?: Array<{
-    symbol: TokenSymbol;
-    balance: number;
-    usdtValue: number;
-  }>;
-  nftWallet?: {
-    nfts: Array<{
-      id: string;
-      name: string;
-      imageUrl: string;
-      value: number;
-    }>;
-  };
   tokens: Array<{
     symbol: TokenSymbol;
     balance: number;
@@ -560,16 +532,5 @@ export interface WalletOverview {
 export interface WalletStore {
   overview: WalletOverview | null;
   isLoading: boolean;
-  qrData: string | null;
-  bnbTransactions: any[] | null;
-  pointTransactions: any[] | null;
-  nftTransactions: any[] | null;
   fetchWalletOverview: () => Promise<void>;
-  generateQRCode: (walletType: string, amount?: number, memo?: string) => Promise<string>;
-  sendBNB: (toAddress: string, amount: number, memo?: string) => Promise<void>;
-  withdrawPoint: (coinSymbol: string, amount: number, toAddress: string) => Promise<void>;
-  sendNFT: (nftId: string, toAddress: string, memo?: string) => Promise<void>;
-  fetchBNBTransactions: () => Promise<any[]>;
-  fetchPointTransactions: () => Promise<any[]>;
-  fetchNFTTransactions: () => Promise<any[]>;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-export interface LoadingSpinnerProps {
+interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   text?: string;
