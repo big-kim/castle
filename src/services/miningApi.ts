@@ -8,7 +8,7 @@ import type {
   MiningActivity
 } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3004/api'
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3004/api'
 
 interface ApiResponse<T> {
   success: boolean
@@ -72,6 +72,12 @@ class MiningApiService {
       return await response.json()
     } catch (error) {
       console.error(`Mining API Error (${endpoint}):`, error)
+      
+      // Provide more specific error messages for connection issues
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Failed to fetch - Backend server not available')
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -190,8 +196,14 @@ class MiningApiService {
 
   /**
    * Transform mining data for compatibility with existing components
+   * 
+   * ORIGINAL BACKEND INTEGRATION CODE - PRESERVED FOR FUTURE USE
+   * This method fetches data from multiple API endpoints and transforms it
+   * into the format expected by the frontend components.
    */
   async getMiningData(): Promise<MiningOverviewData> {
+    // ORIGINAL BACKEND CODE (commented for future restoration):
+    /*
     const [overview, pools, sessions, earnings] = await Promise.all([
       this.getMiningOverview(),
       this.getMiningPools(),
@@ -213,11 +225,16 @@ class MiningApiService {
     // Transform recent earnings to MiningActivity format
     const recentActivities: MiningActivity[] = earnings.slice(0, 10).map(earning => ({
       id: earning.id,
-      type: 'mining' as const,
+      userId: 'mock_user_1', // Add required userId
       coinSymbol: earning.coinSymbol as MineableCoin,
-      amount: earning.amount,
-      timestamp: earning.timestamp,
-      status: 'completed' as const
+      hashPowerAllocated: 1000000000, // Add required hashPowerAllocated
+      hashPowerUsed: 1000000000, // Add required hashPowerUsed
+      dailyReward: earning.amount, // Map amount to dailyReward
+      pendingRewards: 0, // Add required pendingRewards
+      totalMined: earning.amount, // Map amount to totalMined
+      isActive: false, // Add required isActive
+      startedAt: earning.timestamp, // Map timestamp to startedAt
+      updatedAt: earning.timestamp // Add required updatedAt
     }))
 
     // Calculate daily earnings from today's earnings
@@ -236,6 +253,70 @@ class MiningApiService {
       dailyEarnings,
       mineableCoins,
       recentActivities
+    }
+    */
+
+    // CURRENT IMPLEMENTATION: Try backend first, throw error if fails
+    // The mining store will catch this error and use mock data as fallback
+    try {
+      const [overview, pools, sessions, earnings] = await Promise.all([
+        this.getMiningOverview(),
+        this.getMiningPools(),
+        this.getMiningSessions(),
+        this.getMiningEarnings(undefined, 10) // Get recent 10 earnings
+      ])
+
+      // Check if any of the responses are null (indicating API failure)
+      if (!overview || !pools || !sessions || !earnings) {
+        throw new Error('Failed to fetch - Backend server not available')
+      }
+
+      // Transform pools to MineableCoinData format
+      const mineableCoins: MineableCoinData[] = pools.map(pool => ({
+        symbol: pool.coinSymbol as MineableCoin,
+        name: pool.name,
+        hashrate: pool.stats?.totalHashPower || 0,
+        earnings: overview?.balancesByCoin?.[pool.coinSymbol] || 0,
+        difficulty: pool.difficulty,
+        blockReward: pool.stats?.blockReward || 0,
+        estimatedDailyEarnings: pool.stats?.estimatedDailyReward || 0
+      }))
+
+      // Transform recent earnings to MiningActivity format
+      const recentActivities: MiningActivity[] = earnings.slice(0, 10).map(earning => ({
+        id: earning.id,
+        userId: 'mock_user_1', // Add required userId
+        coinSymbol: earning.coinSymbol as MineableCoin,
+        hashPowerAllocated: 1000000000, // Add required hashPowerAllocated
+        hashPowerUsed: 1000000000, // Add required hashPowerUsed
+        dailyReward: earning.amount, // Map amount to dailyReward
+        pendingRewards: 0, // Add required pendingRewards
+        totalMined: earning.amount, // Map amount to totalMined
+        isActive: false, // Add required isActive
+        startedAt: earning.timestamp, // Map timestamp to startedAt
+        updatedAt: earning.timestamp // Add required updatedAt
+      }))
+
+      // Calculate daily earnings from today's earnings
+      const today = new Date()
+      const dailyEarnings = earnings
+        .filter(earning => {
+          const earningDate = new Date(earning.timestamp)
+          return earningDate.toDateString() === today.toDateString()
+        })
+        .reduce((sum, earning) => sum + earning.amount, 0)
+
+      return {
+        totalHashrate: overview?.activeSessionsDetails.reduce((sum, session) => sum + session.hashPower, 0) || 0,
+        totalEarnings: overview?.totalEarnings || 0,
+        activeMachines: overview?.activeSessions || 0,
+        dailyEarnings,
+        mineableCoins,
+        recentActivities
+      }
+    } catch (error) {
+      // Re-throw the error so the mining store can catch it and use mock data
+      throw error
     }
   }
 }

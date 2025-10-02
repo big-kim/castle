@@ -9,7 +9,7 @@ export type TokenSymbol =
   | 'USDT' | 'BTC' | 'ETH' | 'BNB' | 'ADA' | 'LTC' | 'DOGE' 
   | 'BELLS' | 'PEP' | 'JKC' | 'LKY' | 'DINGO' | 'SHIC';
 
-export type MineableCoin = 'BTC' | 'ETH' | 'LTC' | 'BCH' | 'XRP' | 'ADA' | 'DOT' | 'LINK';
+export type MineableCoin = 'LTC' | 'DOGE' | 'BELLS' | 'PEP' | 'JKC' | 'LKY' | 'DINGO' | 'SHIC';
 
 export type GiftCardType = 
   | 'starbucks' | 'cgv' | 'lotte' | 'shinsegae' | 'hyundai' 
@@ -20,7 +20,7 @@ export type NavigationTab = 'home' | 'p2p' | 'mining' | 'finance' | 'gift';
 export type Language = 'ko' | 'en';
 export type Currency = 'USDT';
 export type RiskLevel = 'low' | 'medium' | 'high';
-export type RecordStatus = 'active' | 'completed' | 'cancelled';
+export type RecordStatus = 'active' | 'completed' | 'cancelled' | 'defaulted';
 
 // ============================================================================
 // USER & AUTHENTICATION
@@ -153,10 +153,11 @@ export interface P2POrderForm {
 // MINING
 // ============================================================================
 
+// 첫 번째 MiningActivity 정의 (156행) - 이것을 유지하고 수정
 export interface MiningActivity {
   id: string;
   userId: string;
-  tokenSymbol: TokenSymbol;
+  coinSymbol: MineableCoin; // tokenSymbol에서 coinSymbol로 변경하고 MineableCoin 타입 사용
   hashPowerAllocated: number;
   hashPowerUsed: number;
   dailyReward: number;
@@ -170,7 +171,7 @@ export interface MiningActivity {
 export interface MiningData {
   id: string;
   userId: string;
-  tokenSymbol: TokenSymbol;
+  coinSymbol: MineableCoin; // tokenSymbol에서 coinSymbol로 변경
   hashPower: number;
   dailyReward: number;
   totalMined: number;
@@ -182,7 +183,7 @@ export interface MiningData {
 export interface MiningReward {
   id: string;
   userId: string;
-  tokenSymbol: TokenSymbol;
+  coinSymbol: MineableCoin; // tokenSymbol에서 coinSymbol로 변경
   amount: number;
   hashPowerUsed: number;
   rewardDate: string;
@@ -253,7 +254,7 @@ export interface WithdrawalHistory {
 export interface MiningSession {
   id: string;
   userId: string;
-  coinSymbol: string;
+  coinSymbol: MineableCoin; // string에서 MineableCoin으로 변경
   hashPower: number;
   startTime: string;
   endTime?: string;
@@ -265,7 +266,7 @@ export interface MiningEarning {
   id: string;
   userId: string;
   sessionId: string;
-  coinSymbol: string;
+  coinSymbol: MineableCoin; // string에서 MineableCoin으로 변경
   amount: number;
   hashPower: number;
   timestamp: string;
@@ -274,7 +275,7 @@ export interface MiningEarning {
 export interface MiningWithdrawal {
   id: string;
   userId: string;
-  coinSymbol: string;
+  coinSymbol: MineableCoin; // string에서 MineableCoin으로 변경
   amount: number;
   fee: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
@@ -290,15 +291,9 @@ export interface MineableCoinData {
   difficulty: number;
   blockReward: number;
   estimatedDailyEarnings: number;
-}
-
-export interface MiningActivity {
-  id: string;
-  type: 'mining';
-  coinSymbol: MineableCoin;
-  amount: number;
-  timestamp: string;
-  status: 'completed' | 'pending';
+  currentPriceUsdt: number;
+  dailyReward: number;
+  hashPowerAllocated: number;
 }
 
 export interface MiningOverviewData {
@@ -384,7 +379,6 @@ export interface LendRecord extends BaseFinanceRecord {
 
 export interface LoanRecord extends BaseFinanceRecord {
   interestRate: number;
-  status: RecordStatus | 'defaulted';
   totalInterest: number;
   paidInterest: number;
   remainingBalance: number;
@@ -554,10 +548,10 @@ export interface MiningStore {
   fetchSummary: () => Promise<void>;
   fetchMiningData: () => Promise<void>;
   fetchRewards: () => Promise<void>;
-  startMining: (coinId: string) => Promise<void>;
-  stopMining: (coinId: string) => Promise<void>;
-  claimReward: (coinId: string) => Promise<void>;
-  withdraw: (tokenSymbol: string, amount: number, withdrawalAddress: string) => Promise<void>;
+  startMining: (coinSymbol: MineableCoin) => Promise<void>; // string에서 MineableCoin으로 변경
+  stopMining: (coinSymbol: MineableCoin) => Promise<void>; // string에서 MineableCoin으로 변경
+  claimReward: (coinSymbol: MineableCoin) => Promise<void>; // string에서 MineableCoin으로 변경
+  withdraw: (coinSymbol: MineableCoin, amount: number, withdrawalAddress: string) => Promise<void>; // tokenSymbol에서 coinSymbol로 변경
 }
 
 export interface FinanceStore {
@@ -600,16 +594,51 @@ export interface WalletOverview {
   }>;
 }
 
+export interface BNBTransaction {
+  id: string;
+  hash: string;
+  from: string;
+  to: string;
+  amount: number;
+  fee: number;
+  timestamp: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  blockNumber?: number;
+}
+
+export interface PointTransaction {
+  id: string;
+  type: 'earn' | 'spend' | 'transfer';
+  amount: number;
+  description: string;
+  timestamp: string;
+  status: 'completed' | 'pending' | 'failed';
+  relatedId?: string;
+}
+
+export interface NFTTransaction {
+  id: string;
+  tokenId: string;
+  contractAddress: string;
+  from: string;
+  to: string;
+  tokenName: string;
+  tokenImage?: string;
+  timestamp: string;
+  transactionHash: string;
+  status: 'pending' | 'confirmed' | 'failed';
+}
+
 export interface WalletStore {
   overview: WalletOverview | null;
   qrData: { address: string; qrCode?: string } | null;
-  bnbTransactions: any[];
-  pointTransactions: any[];
-  nftTransactions: any[];
+  bnbTransactions: BNBTransaction[];
+  pointTransactions: PointTransaction[];
+  nftTransactions: NFTTransaction[];
   isLoading: boolean;
   fetchWalletOverview: () => Promise<void>;
   generateQRCode: (assetType: string, amount?: number, memo?: string, tokenSymbol?: string) => Promise<void>;
-  fetchBNBTransactions: () => Promise<any[]>;
-  fetchPointTransactions: () => Promise<any[]>;
-  fetchNFTTransactions: () => Promise<any[]>;
+  fetchBNBTransactions: () => Promise<BNBTransaction[]>;
+  fetchPointTransactions: () => Promise<PointTransaction[]>;
+  fetchNFTTransactions: () => Promise<NFTTransaction[]>;
 }

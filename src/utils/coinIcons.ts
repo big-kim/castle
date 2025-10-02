@@ -17,17 +17,19 @@ const COIN_ICON_MAP: Record<string, string> = {
   // 메이저 코인
   BNB: 'bnb.svg',
   USDT: 'usdt.svg',
+  
+  // 8개 채굴 코인 (PRD 문서 기준)
   LTC: 'ltc.svg',
   DOGE: 'doge.svg',
-  
-  // 기타 채굴 코인
   BELLS: 'bells.svg',
   PEP: 'pep.svg',
   JKC: 'jkc.svg',
   LKY: 'lky.svg',
   DINGO: 'dingo.svg',
-  SHIB: 'shib.svg',
   SHIC: 'shic.svg',
+  
+  // 기타 코인
+  SHIB: 'shib.svg',
   LIC: 'lic.svg'
 };
 

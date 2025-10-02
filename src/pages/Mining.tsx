@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Wallet, TrendingUp, ChevronDown, ChevronUp, PieChart, Hash } from 'lucide-react';
 import { getCoinIcon, getCoinInitial } from '../utils/coinIcons';
 import { useMiningStore } from '../stores/miningStore';
+import type { MineableCoin } from '../types';
 
 interface MiningCoin {
-  symbol: string;
+  symbol: MineableCoin; // string에서 MineableCoin으로 변경
   name: string;
   price: number;
   balance: number;
@@ -40,13 +41,11 @@ const Mining: React.FC = () => {
   const [hashRateData, setHashRateData] = useState<HashRateData[]>([]);
   const [currentHashRate, setCurrentHashRate] = useState(125.5);
   const [rejectionRate, setRejectionRate] = useState(2.1);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showSummaryDetails, setShowSummaryDetails] = useState(false);
 
   // Use mining store
   const { 
     miningData, 
-    isLoading, 
     activeMiningCoins,
     fetchMiningData, 
     startMining, 
@@ -60,11 +59,11 @@ const Mining: React.FC = () => {
 
   // Convert mining store data to component format
   const miningCoins: MiningCoin[] = miningData?.mineableCoins?.map(coin => ({
-    symbol: coin.symbol || '',
-    name: coin.name || '',
-    price: typeof coin.price === 'number' ? coin.price : 0,
-    balance: typeof coin.balance === 'number' ? coin.balance : 0,
-    hashRate: typeof coin.hashRate === 'number' ? coin.hashRate : 0,
+    symbol: coin.symbol,
+    name: coin.name,
+    price: coin.currentPriceUsdt,
+    balance: coin.dailyReward,
+    hashRate: coin.hashPowerAllocated,
     isActive: activeMiningCoins.includes(coin.symbol)
   })) || [];
 
@@ -82,7 +81,7 @@ const Mining: React.FC = () => {
         usdtValue,
         percentage
       };
-    }).sort((a, b) => b.usdtValue - a.usdtValue); // Sort by USDT value descending
+    }).sort((a, b) => b.usdtValue - a.usdtValue);
     
     return {
       totalHashRate,
@@ -98,28 +97,7 @@ const Mining: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleStartMining = async (coin: MiningCoin) => {
-    try {
-      const hashPower = 100; // Default hash power
-      await startMining(coin.symbol, hashPower);
-      // Refresh data after starting mining
-      await fetchMiningData();
-    } catch (error) {
-      console.error('Failed to start mining:', error);
-      alert('Failed to start mining. Please try again.');
-    }
-  };
 
-  const handleStopMining = async (coin: MiningCoin) => {
-    try {
-      await stopMining(coin.symbol);
-      // Refresh data after stopping mining
-      await fetchMiningData();
-    } catch (error) {
-      console.error('Failed to stop mining:', error);
-      alert('Failed to stop mining. Please try again.');
-    }
-  };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -154,7 +132,7 @@ const Mining: React.FC = () => {
       });
     }
     
-    return data.reverse(); // 최신 날짜가 위로 오도록
+    return data.reverse();
   };
 
   const getMiningData = () => {
@@ -164,18 +142,16 @@ const Mining: React.FC = () => {
 
   const getTotalDeposits = () => {
     const data = getMiningData();
-    return data.reduce((sum, item) => sum + (item.depositAmount || 0), 0);
+    return data.reduce((sum, item) => sum + item.depositAmount, 0);
   };
 
   const getTotalValue = () => {
     const data = getMiningData();
-    return data.reduce((sum, item) => sum + (item.usdValue || 0), 0);
+    return data.reduce((sum, item) => sum + item.usdValue, 0);
   };
 
   const getWithdrawableAmount = () => {
-    // 원래 로직: return selectedCoin && typeof selectedCoin.balance === 'number' ? selectedCoin.balance : 0;
-    // 테스트용 수정: 출금 버튼 활성화를 위해 더미 값 반환
-    return 1.5; // 테스트용 더미 값 (1.5 코인)
+    return selectedCoin ? selectedCoin.balance : 0;
   };
 
   const handleWithdraw = async () => {
@@ -186,7 +162,6 @@ const Mining: React.FC = () => {
     
     setIsWithdrawing(true);
     
-    // 출금 처리 시뮬레이션 (실제로는 API 호출)
     setTimeout(() => {
       alert(`${amount} ${selectedCoin.symbol}이(가) ${coinexEmail}로 출금 요청되었습니다.`);
       setWithdrawAmount('');
@@ -234,12 +209,8 @@ const Mining: React.FC = () => {
 
   // 부드러운 데이터 업데이트 함수
   const updateDataSmoothly = React.useCallback(() => {
-    setIsAnimating(true);
-    
-    // 새로운 데이터 생성
     const newData = generateHashRateData();
     
-    // 애니메이션과 함께 데이터 업데이트
     setTimeout(() => {
       setHashRateData(newData);
       
@@ -248,12 +219,10 @@ const Mining: React.FC = () => {
         setCurrentHashRate(latest.hashRate);
         setRejectionRate(latest.rejectionRate);
       }
-      
-      setIsAnimating(false);
-    }, 300); // 300ms 딜레이로 부드러운 전환
+    }, 300);
   }, []);
 
-  // 컴포넌트 마운트 시 데이터 초기화 (추후 API 호출로 대체)
+  // 컴포넌트 마운트 시 데이터 초기화
   React.useEffect(() => {
     const data = generateHashRateData();
     setHashRateData(data);
@@ -264,12 +233,11 @@ const Mining: React.FC = () => {
       setRejectionRate(latest.rejectionRate);
     }
     
-    // 실시간 업데이트 시뮬레이션 (추후 WebSocket 또는 폴링으로 대체)
-    const interval = setInterval(updateDataSmoothly, 8000); // 8초마다 업데이트
+    const interval = setInterval(updateDataSmoothly, 8000);
     
     return () => clearInterval(interval);
   }, [updateDataSmoothly]);
-  
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
@@ -536,7 +504,7 @@ const Mining: React.FC = () => {
               <div className="text-center">
                 <p className="text-xs text-gray-500 mb-1">보유량</p>
                 <p className="font-semibold text-gray-900 text-base">
-                  {(typeof coin.balance === 'number' ? coin.balance : 0).toFixed(4)} {coin.symbol}
+                  {(coin.balance || 0).toFixed(4)} {coin.symbol}
                 </p>
               </div>
             </div>
@@ -582,13 +550,13 @@ const Mining: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-500">Total deposits (7 days)</p>
                     <p className="text-xl font-bold text-gray-900">
-                      {(typeof getTotalDeposits() === 'number' ? getTotalDeposits() : 0).toFixed(4)} {selectedCoin.symbol}
+                      {getTotalDeposits().toFixed(4)} {selectedCoin.symbol}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-500">Total value</p>
                     <p className="text-xl font-bold text-green-600">
-                      {(typeof getTotalValue() === 'number' ? getTotalValue() : 0).toFixed(2)} USDT
+                      {getTotalValue().toFixed(2)} USDT
                     </p>
                   </div>
                 </div>
@@ -600,7 +568,7 @@ const Mining: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-500">출금 가능 수량</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {(typeof getWithdrawableAmount() === 'number' ? getWithdrawableAmount() : 0).toFixed(4)} {selectedCoin.symbol}
+                      {getWithdrawableAmount().toFixed(4)} {selectedCoin.symbol}
                     </p>
                   </div>
                   <button
@@ -693,8 +661,8 @@ const Mining: React.FC = () => {
                         <span className="font-medium text-gray-900">{item.date} {item.time}</span>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-green-600">+{(typeof item.depositAmount === 'number' ? item.depositAmount : 0).toFixed(4)} {selectedCoin.symbol}</p>
-                        <p className="text-sm text-gray-500">{(typeof item.usdValue === 'number' ? item.usdValue : 0).toFixed(2)} USDT</p>
+                        <p className="font-bold text-green-600">+{(item.depositAmount || 0).toFixed(4)} {selectedCoin.symbol}</p>
+                        <p className="text-sm text-gray-500">{(item.usdValue || 0).toFixed(2)} USDT</p>
                       </div>
                     </div>
 
@@ -703,12 +671,12 @@ const Mining: React.FC = () => {
                       <div className="flex items-center space-x-1">
                         <span className="text-gray-500">#</span>
                         <span className="text-gray-600">Hash rate:</span>
-                        <span className="font-medium text-blue-600">{(typeof item.hashRate === 'number' ? item.hashRate : 0).toFixed(1)} MH/s</span>
+                        <span className="font-medium text-blue-600">{(item.hashRate || 0).toFixed(1)} MH/s</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <span className="text-gray-500">🔗</span>
                         <span className="text-gray-600">Cumulative:</span>
-                        <span className="font-medium text-gray-900">{(typeof item.cumulative === 'number' ? item.cumulative : 0).toFixed(2)}</span>
+                        <span className="font-medium text-gray-900">{(item.cumulative || 0).toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -716,15 +684,15 @@ const Mining: React.FC = () => {
                     <div className="bg-gray-50 rounded-lg p-3 space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Base reward:</span>
-                        <span className="font-medium text-gray-900">{(typeof item.baseReward === 'number' ? item.baseReward : 0).toFixed(6)}</span>
+                        <span className="font-medium text-gray-900">{(item.baseReward || 0).toFixed(6)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Hash rate multiplier:</span>
-                        <span className="font-medium text-blue-600">×{(typeof item.hashRateMultiplier === 'number' ? item.hashRateMultiplier : 0).toFixed(2)}</span>
+                        <span className="font-medium text-blue-600">×{(item.hashRateMultiplier || 0).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm font-semibold">
                         <span className="text-gray-900">Final reward:</span>
-                        <span className="text-green-600">{(typeof item.finalReward === 'number' ? item.finalReward : 0).toFixed(6)}</span>
+                        <span className="text-green-600">{(item.finalReward || 0).toFixed(6)}</span>
                       </div>
                     </div>
                   </div>
